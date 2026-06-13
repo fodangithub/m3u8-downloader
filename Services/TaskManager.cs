@@ -297,17 +297,21 @@ public class TaskManager
         if (task.Status is not (TaskStatus.Paused or TaskStatus.Failed))
             return;
 
-        // Reset in-flight segments (marked Failed by cancellation) back to Pending
+        // Immediately set to Downloading to prevent double-click race
+        task.Status = TaskStatus.Downloading;
+        task.StatusText = "Resuming...";
+        task.ErrorMessage = "";
+
+        // Reset in-flight/failed segments back to Pending
         foreach (var seg in task.Segments)
         {
-            if (seg.Status is SegmentStatus.Failed or SegmentStatus.Retrying)
+            if (seg.Status is SegmentStatus.Failed or SegmentStatus.Retrying or SegmentStatus.Pending)
             {
                 seg.Status = SegmentStatus.Pending;
                 seg.RetryCount = 0;
                 seg.ErrorMessage = "";
             }
         }
-        task.ErrorMessage = "";
 
         await _downloadSemaphore.WaitAsync();
         try

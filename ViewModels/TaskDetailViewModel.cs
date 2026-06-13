@@ -74,7 +74,7 @@ public partial class TaskDetailViewModel : ObservableObject
         CancelCommand = new RelayCommand(CancelTask);
         RetryCommand = new AsyncRelayCommand(RetryFailedAsync);
         RetryAllCommand = new AsyncRelayCommand(RetryAllFailedAsync);
-        RetrySegmentCommand = new RelayCommand<int>(RetrySegment);
+        RetrySegmentCommand = new RelayCommand<object>(RetrySegment);
 
         // Subscribe to task changes
         _task.PropertyChanged += (_, e) => UpdateFromTask();
@@ -148,22 +148,26 @@ public partial class TaskDetailViewModel : ObservableObject
             await _taskManager.StartTaskAsync(_task);
     }
 
-    private void RetrySegment(int segmentIndex)
+    private void RetrySegment(object parameter)
     {
+        if (parameter == null) return;
+        int segmentIndex;
+        try { segmentIndex = Convert.ToInt32(parameter); }
+        catch { return; }
+
         var segment = _task.Segments.FirstOrDefault(s => s.Index == segmentIndex);
         if (segment == null) return;
-
         if (segment.Status != SegmentStatus.Failed) return;
 
         segment.Status = SegmentStatus.Pending;
         segment.RetryCount = 0;
         segment.ErrorMessage = "";
+        _task.ErrorMessage = "";
 
         if (_task.Status is TaskStatus.Failed or TaskStatus.Paused)
-        {
-            _task.ErrorMessage = "";
             _ = _taskManager.ResumeTaskAsync(_task);
-        }
+        else if (_task.Status is not (TaskStatus.Downloading or TaskStatus.Merging))
+            _ = _taskManager.StartTaskAsync(_task);
     }
 
     private async Task UpdateLoopAsync()
