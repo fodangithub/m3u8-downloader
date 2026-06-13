@@ -215,8 +215,18 @@
                        Text="// No download tasks. Click '+ NEW_TASK' to add one."
                        HorizontalAlignment="Center" VerticalAlignment="Center"
                        FontSize="14" Foreground="#707088"
-                       FontFamily="Consolas, 'Courier New'"
-                       Visibility="{Binding Tasks.Count, Converter={StaticResource BoolToVis}, ConverterParameter=inverse, FallbackValue=Visible}"/>
+                       FontFamily="Consolas, 'Courier New'">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Tasks.Count}" Value="0">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
 
             <!-- Status Bar -->
             <Border Grid.Row="3" Background="#141420" Padding="12,6"
