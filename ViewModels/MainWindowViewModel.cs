@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using M3U8Downloader.Helpers;
 using M3U8Downloader.Models;
 using M3U8Downloader.Services;
 using Microsoft.Extensions.Logging;
@@ -43,6 +44,14 @@ public partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     private bool showFFmpegPrompt;
+
+    [ObservableProperty]
+    private string _selectedFFmpegVersion = "stable_7_1";
+
+    [ObservableProperty]
+    private string _ffmpegVersionDescription = "";
+
+    public IReadOnlyList<FFmpegVersionInfo> AvailableFFmpegVersions => Constants.FFmpegVersions;
 
     public ICommand AddTaskCommand { get; }
     public ICommand OpenSettingsCommand { get; }
@@ -127,9 +136,23 @@ public partial class MainWindowViewModel : ObservableObject
         });
 
         CheckFFmpegStatus();
+        SelectedFFmpegVersion = string.IsNullOrEmpty(_settingsService.Settings.FFmpegVersion)
+            ? "stable_7_1" : _settingsService.Settings.FFmpegVersion;
+        UpdateFFmpegVersionDescription();
 
         // Update stats periodically
         _ = UpdateStatsAsync();
+    }
+
+    partial void OnSelectedFFmpegVersionChanged(string value)
+    {
+        UpdateFFmpegVersionDescription();
+    }
+
+    private void UpdateFFmpegVersionDescription()
+    {
+        var version = Constants.GetFFmpegVersion(SelectedFFmpegVersion);
+        FfmpegVersionDescription = version.Description;
     }
 
     private void CheckFFmpegStatus()
@@ -147,6 +170,10 @@ public partial class MainWindowViewModel : ObservableObject
         {
             IsDownloadingFFmpeg = true;
             FfmpegStatusText = "Downloading FFmpeg...";
+
+            // Set download URL from selected version
+            _settingsService.Settings.FFmpegDownloadUrl = Constants.GetFFmpegDownloadUrl(SelectedFFmpegVersion);
+            _settingsService.Settings.FFmpegVersion = SelectedFFmpegVersion;
 
             var progress = new Progress<(long downloaded, long total)>(p =>
             {

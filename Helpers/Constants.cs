@@ -23,4 +23,32 @@ public static class Constants
     // UI
     public const int ProgressBarHeight = 20;
     public const int SegmentGridCellSize = 4;
+
+    // FFmpeg version definitions
+    public static readonly FFmpegVersionInfo[] FFmpegVersions =
+    [
+        new(
+            Id: "stable_7_1",
+            DisplayName: "FFmpeg 7.1 (Stable - Recommended)",
+            Description: "Best compatibility with most GPU drivers. Supports NVIDIA NVC API 12.x (driver 550+). Recommended for most users.",
+            Url: "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n7.1-latest-win64-gpl-7.1.zip"),
+        new(
+            Id: "lts_6_1",
+            DisplayName: "FFmpeg 6.1 (LTS - Legacy GPU)",
+            Description: "For older GPUs with outdated drivers. Supports NVIDIA NVC API 11.x (driver 470+). Use if Stable fails.",
+            Url: "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n6.1-latest-win64-gpl-6.1.zip"),
+        new(
+            Id: "latest_master",
+            DisplayName: "Latest Master (Bleeding Edge)",
+            Description: "Newest features but requires latest drivers. NVIDIA NVC API 13.x (driver 610+). Only for up-to-date systems.",
+            Url: "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"),
+    ];
+
+    public static FFmpegVersionInfo GetFFmpegVersion(string id) =>
+        FFmpegVersions.FirstOrDefault(v => v.Id == id) ?? FFmpegVersions[0];
+
+    public static string GetFFmpegDownloadUrl(string versionId) =>
+        GetFFmpegVersion(versionId).Url;
 }
+
+public record FFmpegVersionInfo(string Id, string DisplayName, string Description, string Url);

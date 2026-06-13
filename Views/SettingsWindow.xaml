@@ -179,15 +179,49 @@
                 <TabItem Header="FFmpeg">
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
                         <StackPanel>
-                            <TextBlock Text="FFMPEG_PATH" FontWeight="Bold" Margin="0,0,0,4"
+                            <!-- Version Selector -->
+                            <TextBlock Text="FFMPEG_VERSION" FontWeight="Bold" Margin="0,0,0,4"
+                                       Foreground="#00F0FF" FontFamily="Consolas, 'Courier New'"/>
+                            <TextBlock Text="Choose which FFmpeg build to download. Older versions support more GPU drivers."
+                                       TextWrapping="Wrap" Foreground="#707088" FontSize="11" Margin="0,0,0,8"
+                                       FontFamily="Consolas, 'Courier New'"/>
+                            <ComboBox SelectedValue="{Binding FfmpegSelectedVersion}" Width="320"
+                                      HorizontalAlignment="Left" Padding="8,4"
+                                      SelectedValuePath="Tag">
+                                <ComboBoxItem Content="FFmpeg 7.1 (Stable - Recommended)" Tag="stable_7_1"/>
+                                <ComboBoxItem Content="FFmpeg 6.1 (LTS - Legacy GPU)" Tag="lts_6_1"/>
+                                <ComboBoxItem Content="Latest Master (Bleeding Edge)" Tag="latest_master"/>
+                            </ComboBox>
+                            <TextBlock Text="{Binding FfmpegVersionDescription}"
+                                       TextWrapping="Wrap" Foreground="#B0B0C0" FontSize="11" Margin="0,4,0,8"
+                                       FontFamily="Consolas, 'Courier New'"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Button Content="DOWNLOAD" Command="{Binding DownloadFFmpegCommand}"
+                                        Padding="16,6" Margin="0,0,8,0"
+                                        Background="#1000F0FF" Foreground="#00F0FF" BorderBrush="#00F0FF"
+                                        BorderThickness="1" FontSize="13"
+                                        Visibility="{Binding IsDownloadingFFmpeg, Converter={StaticResource BoolToVis}, ConverterParameter=inverse}"/>
+                                <Button Content="BROWSE_LOCAL" Command="{Binding BrowseFFmpegCommand}"
+                                        Padding="16,6"
+                                        Background="#10707088" Foreground="#707088" BorderBrush="#707088"
+                                        BorderThickness="1" FontSize="13"/>
+                            </StackPanel>
+                            <StackPanel Visibility="{Binding IsDownloadingFFmpeg, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="{Binding FfmpegDownloadStatusText}" Foreground="#FFD000" Margin="0,0,0,4"
+                                           FontFamily="Consolas, 'Courier New'"/>
+                                <ProgressBar Value="{Binding FfmpegDownloadProgress}" Height="8"
+                                             Background="#1A1A2E" Foreground="#FFD000"/>
+                            </StackPanel>
+
+                            <Separator Margin="0,12,0,12" Background="#1E1E2E"/>
+
+                            <!-- Installed Version Info -->
+                            <TextBlock Text="INSTALLED_FFMPEG" FontWeight="Bold" Margin="0,0,0,4"
                                        Foreground="#00F0FF" FontFamily="Consolas, 'Courier New'"/>
                             <DockPanel>
-                                <Button Content="BROWSE" Command="{Binding BrowseFFmpegCommand}"
-                                        DockPanel.Dock="Right" Padding="12,4" Margin="8,0,0,0"
-                                        Background="#10707088" Foreground="#707088" BorderBrush="#707088"
-                                        BorderThickness="1"/>
                                 <TextBox Text="{Binding FfmpegPath, UpdateSourceTrigger=PropertyChanged}"
-                                         VerticalContentAlignment="Center" Padding="8,4"/>
+                                         VerticalContentAlignment="Center" Padding="8,4"
+                                         Foreground="#707088"/>
                             </DockPanel>
 
                             <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
@@ -202,7 +236,9 @@
                                        Visibility="{Binding IsFFmpegInstalled, Converter={StaticResource BoolToVis}}"
                                        FontFamily="Consolas, 'Courier New'"/>
 
-                            <TextBlock Text="ENCODING_SETTINGS" FontWeight="Bold" Margin="0,24,0,8"
+                            <Separator Margin="0,16,0,16" Background="#1E1E2E"/>
+
+                            <TextBlock Text="ENCODING_SETTINGS" FontWeight="Bold" Margin="0,0,0,8"
                                        Foreground="#00F0FF" FontFamily="Consolas, 'Courier New'"/>
                             <DockPanel Margin="0,0,0,8">
                                 <TextBlock Text="Preset:" VerticalAlignment="Center"

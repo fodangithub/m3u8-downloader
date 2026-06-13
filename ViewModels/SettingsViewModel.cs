@@ -1,6 +1,7 @@
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using M3U8Downloader.Helpers;
 using M3U8Downloader.Models;
 using M3U8Downloader.Services;
 using Microsoft.Extensions.Logging;
@@ -48,6 +49,13 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private bool _ffmpegUseGPU;
     [ObservableProperty] private string _ffmpegGPUEncoder = "";
     [ObservableProperty] private string _ffmpegDetectionLog = "";
+    [ObservableProperty] private string _ffmpegSelectedVersion = "stable_7_1";
+    [ObservableProperty] private string _ffmpegVersionDescription = "";
+    [ObservableProperty] private bool _isDownloadingFFmpeg;
+    [ObservableProperty] private double _ffmpegDownloadProgress;
+    [ObservableProperty] private string _ffmpegDownloadStatusText = "";
+
+    public IReadOnlyList<FFmpegVersionInfo> AvailableFFmpegVersions => Constants.FFmpegVersions;
 
     // HTTP headers
     [ObservableProperty] private string defaultUserAgent = "";
@@ -56,6 +64,7 @@ public partial class SettingsViewModel : ObservableObject
 
     public ICommand BrowseSaveDirCommand { get; }
     public ICommand BrowseFFmpegCommand { get; }
+    public ICommand DownloadFFmpegCommand { get; }
     public ICommand SaveCommand { get; }
     public ICommand CancelCommand { get; }
     public ICommand CheckFFmpegCommand { get; }
@@ -76,12 +85,25 @@ public partial class SettingsViewModel : ObservableObject
 
         BrowseSaveDirCommand = new RelayCommand(BrowseSaveDir);
         BrowseFFmpegCommand = new RelayCommand(BrowseFFmpeg);
+        DownloadFFmpegCommand = new AsyncRelayCommand(DownloadFFmpegAsync);
         SaveCommand = new RelayCommand(Save);
         CancelCommand = new RelayCommand(Cancel);
         CheckFFmpegCommand = new AsyncRelayCommand(CheckFFmpegAsync);
 
         LoadFromSettings();
+        UpdateVersionDescription();
         _ = CheckFFmpegAsync();
+    }
+
+    partial void OnFfmpegSelectedVersionChanged(string value)
+    {
+        UpdateVersionDescription();
+    }
+
+    private void UpdateVersionDescription()
+    {
+        var version = Constants.GetFFmpegVersion(FfmpegSelectedVersion);
+        FfmpegVersionDescription = version.Description;
     }
 
     private void LoadFromSettings()
@@ -107,6 +129,7 @@ public partial class SettingsViewModel : ObservableObject
         ProxyPassword = s.Proxy.Password;
         ProxyType = s.Proxy.Type;
         FfmpegPath = s.FFmpegPath;
+        FfmpegSelectedVersion = string.IsNullOrEmpty(s.FFmpegVersion) ? "stable_7_1" : s.FFmpegVersion;
         FfmpegPreset = s.FFmpegPreset;
         FfmpegCRF = s.FFmpegCRF;
         FfmpegUseGPU = s.FFmpegUseGPU;
@@ -138,6 +161,8 @@ public partial class SettingsViewModel : ObservableObject
         s.Proxy.Username = ProxyUsername;
         s.Proxy.Password = ProxyPassword;
         s.Proxy.Type = ProxyType;
+        s.FFmpegVersion = FfmpegSelectedVersion;
+        s.FFmpegDownloadUrl = Constants.GetFFmpegDownloadUrl(FfmpegSelectedVersion);
         s.FFmpegPath = FfmpegPath;
         s.FFmpegPreset = FfmpegPreset;
         s.FFmpegCRF = Math.Clamp(FfmpegCRF, 0, 51);
@@ -181,6 +206,50 @@ public partial class SettingsViewModel : ObservableObject
         {
             FfmpegPath = dialog.FileName;
             _ = CheckFFmpegAsync();
+        }
+    }
+
+    private async Task DownloadFFmpegAsync()
+    {
+        if (IsDownloadingFFmpeg) return;
+
+        try
+        {
+            IsDownloadingFFmpeg = true;
+            FfmpegDownloadStatusText = "Downloading FFmpeg...";
+
+            // Update the download URL to match selected version before downloading
+            _settingsService.Settings.FFmpegDownloadUrl = Constants.GetFFmpegDownloadUrl(FfmpegSelectedVersion);
+
+            var progress = new Progress<(long downloaded, long total)>(p =>
+            {
+                if (p.total > 0)
+                    FfmpegDownloadProgress = (double)p.downloaded / p.total * 100;
+            });
+
+            var path = await _ffmpegDownloader.DownloadFFmpegAsync(progress);
+            FfmpegPath = path;
+
+            var isValid = await _ffmpegDownloader.ValidateInstallationAsync();
+            if (isValid)
+            {
+                FfmpegDownloadStatusText = "FFmpeg installed successfully!";
+            }
+            else
+            {
+                FfmpegDownloadStatusText = "Downloaded but validation failed";
+            }
+
+            _ = CheckFFmpegAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to download FFmpeg");
+            FfmpegDownloadStatusText = $"Download failed: {ex.Message}";
+        }
+        finally
+        {
+            IsDownloadingFFmpeg = false;
         }
     }
 

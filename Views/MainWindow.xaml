@@ -72,8 +72,18 @@
                     <TextBlock Text="// FFmpeg Not Found" FontSize="16" FontWeight="Bold"
                                Foreground="#FFD000" Margin="0,0,0,8"
                                FontFamily="Consolas, 'Courier New'"/>
-                    <TextBlock Text="FFmpeg is required for merging and transcoding. Click below to download automatically."
-                               TextWrapping="Wrap" Foreground="#BBA000" Margin="0,0,0,12"
+                    <TextBlock Text="FFmpeg is required for merging and transcoding. Select a version and download:"
+                               TextWrapping="Wrap" Foreground="#BBA000" Margin="0,0,0,8"
+                               FontFamily="Consolas, 'Courier New'"/>
+                    <ComboBox SelectedValue="{Binding SelectedFFmpegVersion}" Width="340"
+                              HorizontalAlignment="Left" Padding="8,4"
+                              SelectedValuePath="Tag" Margin="0,0,0,4">
+                        <ComboBoxItem Content="FFmpeg 7.1 (Stable - Recommended)" Tag="stable_7_1"/>
+                        <ComboBoxItem Content="FFmpeg 6.1 (LTS - Legacy GPU)" Tag="lts_6_1"/>
+                        <ComboBoxItem Content="Latest Master (Bleeding Edge)" Tag="latest_master"/>
+                    </ComboBox>
+                    <TextBlock Text="{Binding FfmpegVersionDescription}"
+                               TextWrapping="Wrap" Foreground="#997700" FontSize="11" Margin="0,0,0,12"
                                FontFamily="Consolas, 'Courier New'"/>
                     <Button Content="DOWNLOAD_FFMPEG" Command="{Binding DownloadFFmpegCommand}"
                             Padding="20,8" HorizontalAlignment="Left"

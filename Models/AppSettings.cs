@@ -23,8 +23,9 @@ public class AppSettings
     public ProxyConfig Proxy { get; set; } = new();
 
     // FFmpeg
+    public string FFmpegVersion { get; set; } = "stable_7_1";
     public string FFmpegPath { get; set; } = "";
-    public string FFmpegDownloadUrl { get; set; } = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip";
+    public string FFmpegDownloadUrl { get; set; } = "";
     public string FFmpegPreset { get; set; } = "default";
     public int FFmpegCRF { get; set; } = 0;
     public bool FFmpegUseGPU { get; set; } = true;
