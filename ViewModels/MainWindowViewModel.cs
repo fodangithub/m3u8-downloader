@@ -128,8 +128,8 @@ public partial class MainWindowViewModel : ObservableObject
             task.MergeProgress = 0;
             task.ErrorMessage = "";
 
-            // Use resume path if task was paused or has existing segments
-            if (task.Status == TaskStatus.Paused)
+            // Use resume path for Paused or Failed tasks to preserve completed segments
+            if (task.Status is TaskStatus.Paused or TaskStatus.Failed)
                 await _taskManager.ResumeTaskAsync(task);
             else
                 await _taskManager.StartTaskAsync(task);

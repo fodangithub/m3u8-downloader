@@ -125,7 +125,7 @@ public partial class TaskDetailViewModel : ObservableObject
             segment.ErrorMessage = "";
         }
 
-        if (_task.Status == TaskStatus.Paused)
+        if (_task.Status is TaskStatus.Paused or TaskStatus.Failed)
             await _taskManager.ResumeTaskAsync(_task);
         else
             await _taskManager.StartTaskAsync(_task);
@@ -142,7 +142,7 @@ public partial class TaskDetailViewModel : ObservableObject
         _task.MergeProgress = 0;
         _task.ErrorMessage = "";
 
-        if (_task.Status == TaskStatus.Paused)
+        if (_task.Status is TaskStatus.Paused or TaskStatus.Failed)
             await _taskManager.ResumeTaskAsync(_task);
         else
             await _taskManager.StartTaskAsync(_task);
@@ -159,14 +159,9 @@ public partial class TaskDetailViewModel : ObservableObject
         segment.RetryCount = 0;
         segment.ErrorMessage = "";
 
-        // Restart the task if it's in a state that needs restarting
-        if (_task.Status == TaskStatus.Failed)
+        if (_task.Status is TaskStatus.Failed or TaskStatus.Paused)
         {
             _task.ErrorMessage = "";
-            _ = _taskManager.StartTaskAsync(_task);
-        }
-        else if (_task.Status == TaskStatus.Paused)
-        {
             _ = _taskManager.ResumeTaskAsync(_task);
         }
     }

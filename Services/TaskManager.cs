@@ -294,7 +294,7 @@ public class TaskManager
     /// </summary>
     public async Task ResumeTaskAsync(DownloadTask task)
     {
-        if (task.Status != TaskStatus.Paused)
+        if (task.Status is not (TaskStatus.Paused or TaskStatus.Failed))
             return;
 
         // Reset in-flight segments (marked Failed by cancellation) back to Pending
