@@ -157,17 +157,17 @@ public partial class TaskDetailViewModel : ObservableObject
 
         var segment = _task.Segments.FirstOrDefault(s => s.Index == segmentIndex);
         if (segment == null) return;
-        if (segment.Status != SegmentStatus.Failed) return;
 
         segment.Status = SegmentStatus.Pending;
         segment.RetryCount = 0;
         segment.ErrorMessage = "";
         _task.ErrorMessage = "";
 
-        if (_task.Status is TaskStatus.Failed or TaskStatus.Paused)
+        if (_task.Status is TaskStatus.Failed or TaskStatus.Paused
+            or TaskStatus.Completed or TaskStatus.Cancelled)
             _ = _taskManager.ResumeTaskAsync(_task);
-        else if (_task.Status is not (TaskStatus.Downloading or TaskStatus.Merging))
-            _ = _taskManager.StartTaskAsync(_task);
+        // If Downloading: the engine will pick up the Pending segment on next pass
+        // If Merging: let merge finish, user can retry after
     }
 
     private async Task UpdateLoopAsync()

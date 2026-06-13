@@ -294,7 +294,8 @@ public class TaskManager
     /// </summary>
     public async Task ResumeTaskAsync(DownloadTask task)
     {
-        if (task.Status is not (TaskStatus.Paused or TaskStatus.Failed))
+        if (task.Status is not (TaskStatus.Paused or TaskStatus.Failed
+            or TaskStatus.Completed or TaskStatus.Cancelled))
             return;
 
         // Immediately set to Downloading to prevent double-click race

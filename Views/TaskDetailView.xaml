@@ -126,7 +126,7 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Text="// SEGMENT_STATUS" FontSize="14" FontWeight="Bold"
+                <TextBlock Grid.Row="0" Text="// SEGMENTS (click any block to re-download)" FontSize="14" FontWeight="Bold"
                            Foreground="#00F0FF" Margin="0,0,0,8"
                            FontFamily="Consolas, 'Courier New'"/>
 
@@ -142,7 +142,7 @@
                     <TextBlock Text="Retrying" FontSize="11" Foreground="#707088" Margin="0,0,12,0" VerticalAlignment="Center"
                                FontFamily="Consolas, 'Courier New'"/>
                     <Border Width="12" Height="12" Background="#FF0040" CornerRadius="1" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="Failed (click to retry)" FontSize="11" Foreground="#707088" Margin="0,0,12,0" VerticalAlignment="Center"
+                    <TextBlock Text="Failed" FontSize="11" Foreground="#707088" Margin="0,0,12,0" VerticalAlignment="Center"
                                FontFamily="Consolas, 'Courier New'"/>
                     <Border Width="12" Height="12" Background="#1A1A2E" CornerRadius="1" Margin="0,0,4,0" VerticalAlignment="Center"/>
                     <TextBlock Text="Pending" FontSize="11" Foreground="#707088" VerticalAlignment="Center"
@@ -166,7 +166,7 @@
                                 <Border Width="8" Height="8" Margin="1"
                                         Background="{Binding Status, Converter={StaticResource SegStatusColor}}"
                                         CornerRadius="0" Cursor="Hand"
-                                        ToolTip="{Binding Index, StringFormat=Segment #{0} (click to retry if failed)}">
+                                        ToolTip="{Binding Index, StringFormat=Segment #{0} (click to re-download)}">
                                     <Border.InputBindings>
                                         <MouseBinding MouseAction="LeftClick"
                                                       Command="{Binding DataContext.RetrySegmentCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
