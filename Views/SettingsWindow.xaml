@@ -247,6 +247,16 @@
                                        Margin="0,4,0,0" FontWeight="Bold"
                                        Visibility="{Binding FfmpegUseGPU, Converter={StaticResource BoolToVis}}"
                                        FontFamily="Consolas, 'Courier New'"/>
+                            <TextBlock Text="Detection Log:" FontSize="12" Foreground="#707088"
+                                       Margin="0,12,0,4"
+                                       Visibility="{Binding FfmpegUseGPU, Converter={StaticResource BoolToVis}}"
+                                       FontFamily="Consolas, 'Courier New'"/>
+                            <TextBox Text="{Binding FfmpegDetectionLog, Mode=OneWay}"
+                                     IsReadOnly="True" TextWrapping="Wrap"
+                                     Height="120" VerticalScrollBarVisibility="Auto"
+                                     FontSize="11" Padding="8,4"
+                                     Visibility="{Binding FfmpegUseGPU, Converter={StaticResource BoolToVis}}"
+                                     FontFamily="Consolas, 'Courier New'"/>
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>

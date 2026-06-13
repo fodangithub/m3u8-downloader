@@ -47,6 +47,7 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private int _ffmpegCRF;
     [ObservableProperty] private bool _ffmpegUseGPU;
     [ObservableProperty] private string _ffmpegGPUEncoder = "";
+    [ObservableProperty] private string _ffmpegDetectionLog = "";
 
     // HTTP headers
     [ObservableProperty] private string defaultUserAgent = "";
@@ -192,10 +193,11 @@ public partial class SettingsViewModel : ObservableObject
             FfmpegVersion = version;
             IsFFmpegInstalled = true;
 
-            // Detect GPU encoder if GPU mode is enabled
             if (FfmpegUseGPU)
             {
                 var encoder = await _ffmpegService.DetectGPUEncoderAsync(path);
+                FfmpegDetectionLog = _ffmpegService.LastGPUDetectionLog;
+
                 if (!string.IsNullOrEmpty(encoder))
                 {
                     FfmpegGPUEncoder = encoder;
@@ -209,6 +211,7 @@ public partial class SettingsViewModel : ObservableObject
             else
             {
                 FfmpegGPUEncoder = "";
+                FfmpegDetectionLog = "";
             }
         }
         else
@@ -216,6 +219,7 @@ public partial class SettingsViewModel : ObservableObject
             FfmpegVersion = "";
             IsFFmpegInstalled = false;
             FfmpegGPUEncoder = "";
+            FfmpegDetectionLog = "";
         }
     }
 }

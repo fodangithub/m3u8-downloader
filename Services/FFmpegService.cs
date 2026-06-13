@@ -24,70 +24,108 @@ public partial class FFmpegService
     }
 
     /// <summary>
-    /// Detect available GPU encoders in FFmpeg. Returns the first one found, or null.
+    /// Detailed log from the last GPU detection attempt. Read by the Settings UI
+    /// to show the user WHY an encoder was not detected (e.g. driver too old).
+    /// </summary>
+    public string LastGPUDetectionLog { get; private set; } = "";
+
+    /// <summary>
+    /// Detect available GPU encoders in FFmpeg. Returns the first working one, or null.
     /// Priority: h264_nvenc (NVIDIA) > h264_amf (AMD) > h264_qsv (Intel Quick Sync)
-    /// Also does a short test encode to verify the GPU is actually functional.
+    /// Populates LastGPUDetectionLog with diagnostic details for the UI.
     /// </summary>
     public async Task<string?> DetectGPUEncoderAsync(string ffmpegPath)
     {
+        var log = new StringBuilder();
+        LastGPUDetectionLog = "";
+
         try
         {
-            var psi = new ProcessStartInfo(ffmpegPath, "-encoders")
+            // Phase 1: List available encoders
+            var listPsi = new ProcessStartInfo(ffmpegPath, "-encoders")
             {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
-            using var process = Process.Start(psi);
-            if (process == null) return null;
-
-            var output = await process.StandardOutput.ReadToEndAsync();
-            await process.WaitForExitAsync();
-
-            // Check in priority order
-            var gpuEncoders = new[] { "h264_nvenc", "h264_amf", "h264_qsv" };
-            foreach (var encoder in gpuEncoders)
+            using var listProcess = Process.Start(listPsi);
+            if (listProcess == null)
             {
-                if (!output.Contains(encoder)) continue;
+                log.AppendLine("Failed to start ffmpeg -encoders");
+                LastGPUDetectionLog = log.ToString();
+                return null;
+            }
 
-                // Verify GPU encoder actually works with a test encode
-                var works = await TestGPUEncoderAsync(ffmpegPath, encoder);
-                if (works)
+            var stdout = await listProcess.StandardOutput.ReadToEndAsync();
+            var stderr = await listProcess.StandardError.ReadToEndAsync();
+            await listProcess.WaitForExitAsync();
+
+            // Match encoder names at word boundaries to avoid false positives
+            var gpuEncoders = new[] { "h264_nvenc", "h264_amf", "h264_qsv" };
+            var listed = new List<string>();
+            foreach (var enc in gpuEncoders)
+            {
+                if (Regex.IsMatch(stdout, $@"\b{enc}\b"))
+                    listed.Add(enc);
+            }
+
+            if (listed.Count == 0)
+            {
+                log.AppendLine("No GPU encoders found in ffmpeg -encoders output");
+                LastGPUDetectionLog = log.ToString();
+                return null;
+            }
+
+            log.AppendLine($"Listed encoders: {string.Join(", ", listed)}");
+
+            // Phase 2: Test each listed encoder with multiple parameter combos
+            foreach (var encoder in listed)
+            {
+                log.AppendLine($"\n--- Testing {encoder} ---");
+                var testArgSets = GetTestArgSets(encoder);
+
+                for (var i = 0; i < testArgSets.Length; i++)
                 {
-                    _logger.LogInformation("GPU encoder detected and verified: {Encoder}", encoder);
-                    return encoder;
-                }
-                else
-                {
-                    _logger.LogWarning("GPU encoder {Encoder} listed but failed test encode, skipping", encoder);
+                    var (args, label) = testArgSets[i];
+                    log.AppendLine($"  Attempt {i + 1} ({label}): {args}");
+
+                    var (success, errOutput) = await RunTestEncodeAsync(ffmpegPath, args);
+                    if (success)
+                    {
+                        log.AppendLine($"  SUCCESS: {encoder} verified");
+                        _logger.LogInformation("GPU encoder detected and verified: {Encoder}", encoder);
+                        LastGPUDetectionLog = log.ToString();
+                        return encoder;
+                    }
+
+                    // Extract the key error lines for diagnostics
+                    var keyErrors = ExtractKeyErrors(errOutput);
+                    log.AppendLine($"  FAILED: {keyErrors}");
                 }
             }
 
-            _logger.LogInformation("No GPU encoder detected, will use CPU (libx264)");
+            _logger.LogInformation("No working GPU encoder found. Detection log:\n{Log}", log);
+            LastGPUDetectionLog = log.ToString();
             return null;
         }
-        catch
+        catch (Exception ex)
         {
+            log.AppendLine($"Exception: {ex.Message}");
+            LastGPUDetectionLog = log.ToString();
             return null;
         }
     }
 
     /// <summary>
-    /// Test if a GPU encoder actually works by doing a short test encode.
+    /// Run a single test encode and return (success, stderr).
+    /// Reads stdout and stderr concurrently to avoid deadlocks.
     /// </summary>
-    private async Task<bool> TestGPUEncoderAsync(string ffmpegPath, string encoder)
+    private async Task<(bool success, string stderr)> RunTestEncodeAsync(string ffmpegPath, string args)
     {
         try
         {
-            var testArgs = encoder switch
-            {
-                "h264_nvenc" => $"-y -f lavfi -i testsrc=duration=1:size=320x240:rate=30 -c:v {encoder} -preset fast -rc vbr -cq 23 -f null NUL",
-                "h264_amf" => $"-y -f lavfi -i testsrc=duration=1:size=320x240:rate=30 -c:v {encoder} -quality balanced -f null NUL",
-                "h264_qsv" => $"-y -init_hw_device qsv=hw -f lavfi -i testsrc=duration=1:size=320x240:rate=30 -c:v {encoder} -global_quality 23 -f null NUL",
-                _ => $"-y -f lavfi -i testsrc=duration=1:size=320x240:rate=30 -c:v {encoder} -f null NUL"
-            };
-            var psi = new ProcessStartInfo(ffmpegPath, testArgs)
+            var psi = new ProcessStartInfo(ffmpegPath, args)
             {
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
@@ -95,15 +133,79 @@ public partial class FFmpegService
                 CreateNoWindow = true
             };
             using var process = Process.Start(psi);
-            if (process == null) return false;
+            if (process == null) return (false, "Failed to start process");
+
+            var stderrTask = process.StandardError.ReadToEndAsync();
+            var stdoutTask = process.StandardOutput.ReadToEndAsync();
+            await Task.WhenAll(stderrTask, stdoutTask);
             await process.WaitForExitAsync();
-            return process.ExitCode == 0;
+
+            return (process.ExitCode == 0, stderrTask.Result);
         }
-        catch
+        catch (Exception ex)
         {
-            return false;
+            return (false, ex.Message);
         }
     }
+
+    /// <summary>
+    /// Extract the most informative error lines from FFmpeg stderr output.
+    /// Skips boilerplate lines and focuses on encoder-specific errors.
+    /// </summary>
+    private static string ExtractKeyErrors(string stderr)
+    {
+        if (string.IsNullOrWhiteSpace(stderr))
+            return "(no error output)";
+
+        var lines = stderr.Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Select(l => l.Trim())
+            .Where(l => !string.IsNullOrEmpty(l))
+            .Where(l => !l.StartsWith("Press [q]") && !l.StartsWith("Output #")
+                     && !l.StartsWith("Stream mapping") && !l.StartsWith("frame=")
+                     && !l.Contains("Press [?]"))
+            .Take(3)
+            .ToList();
+
+        return lines.Count > 0 ? string.Join(" | ", lines) : "(no meaningful errors)";
+    }
+
+    /// <summary>
+    /// Get multiple test argument sets for each encoder, ordered from most
+    /// specific to most basic. If the first fails (e.g. unsupported preset),
+    /// simpler fallbacks are tried.
+    /// </summary>
+    private static (string args, string label)[] GetTestArgSets(string encoder) => encoder switch
+    {
+        "h264_nvenc" =>
+        [
+            ($"-y -f lavfi -i testsrc=duration=1:size=320x240:rate=30 -c:v {encoder} -preset fast -rc vbr -cq 23 -f null NUL",
+             "preset=fast, rc=vbr, cq=23"),
+            ($"-y -f lavfi -i testsrc=duration=1:size=320x240:rate=30 -c:v {encoder} -rc constqp -qp 28 -f null NUL",
+             "rc=constqp, qp=28"),
+            ($"-y -f lavfi -i testsrc=duration=1:size=320x240:rate=30 -c:v {encoder} -f null NUL",
+             "defaults"),
+        ],
+        "h264_amf" =>
+        [
+            ($"-y -f lavfi -i testsrc=duration=1:size=320x240:rate=30 -c:v {encoder} -quality balanced -f null NUL",
+             "quality=balanced"),
+            ($"-y -f lavfi -i testsrc=duration=1:size=320x240:rate=30 -c:v {encoder} -usage transcoding -f null NUL",
+             "usage=transcoding"),
+            ($"-y -f lavfi -i testsrc=duration=1:size=320x240:rate=30 -c:v {encoder} -f null NUL",
+             "defaults"),
+        ],
+        "h264_qsv" =>
+        [
+            ($"-y -init_hw_device qsv=hw -f lavfi -i testsrc=duration=1:size=320x240:rate=30 -c:v {encoder} -global_quality 23 -f null NUL",
+             "init_hw, global_quality=23"),
+            ($"-y -f lavfi -i testsrc=duration=1:size=320x240:rate=30 -c:v {encoder} -f null NUL",
+             "defaults"),
+        ],
+        _ =>
+        [
+            ($"-y -f lavfi -i testsrc=duration=1:size=320x240:rate=30 -c:v {encoder} -f null NUL", "defaults"),
+        ],
+    };
 
     public async Task<bool> ValidateFFmpegAsync(string path)
     {
