@@ -25,8 +25,8 @@ public class AppSettings
     // FFmpeg
     public string FFmpegPath { get; set; } = "";
     public string FFmpegDownloadUrl { get; set; } = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip";
-    public string FFmpegPreset { get; set; } = "medium";
-    public int FFmpegCRF { get; set; } = 23;
+    public string FFmpegPreset { get; set; } = "default";
+    public int FFmpegCRF { get; set; } = 0;
     public bool FFmpegUseGPU { get; set; } = true;
     public string FFmpegGPUEncoder { get; set; } = ""; // e.g. "h264_nvenc", "h264_amf", "h264_qsv"
 

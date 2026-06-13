@@ -285,20 +285,38 @@ public partial class FFmpegService
         if (videoEncoder == "libx264")
         {
             args.Append("-c:v libx264 ");
-            args.Append("-preset ").Append(settings.FFmpegPreset).Append(' ');
-            args.Append("-crf ").Append(settings.FFmpegCRF).Append(' ');
+            if (settings.FFmpegPreset != "default")
+                args.Append("-preset ").Append(settings.FFmpegPreset).Append(' ');
+            if (settings.FFmpegCRF > 0)
+                args.Append("-crf ").Append(settings.FFmpegCRF).Append(' ');
+            else
+                args.Append("-crf 23 "); // FFmpeg default for libx264
         }
         else if (videoEncoder == "h264_nvenc")
         {
-            // NVENC: use -rc constqp -qp for constant quality (works on all recent FFmpeg builds)
+            // NVENC best practices (Super User 1296374):
+            // -rc constqp for constant quality (equivalent to CRF), or -rc vbr with -cq for VBR
+            // -preset p5/p6/p7 for better quality, or omit for default (p4)
+            // -tune hq, -b_ref_mode middle, -rc-lookahead 32 for quality tuning
             args.Append("-c:v h264_nvenc ");
-            args.Append("-rc constqp -qp ").Append(settings.FFmpegCRF).Append(' ');
+            if (settings.FFmpegPreset != "default")
+            {
+                // Map string presets to NVENC integer presets
+                var nvencPreset = MapPresetToNVENC(settings.FFmpegPreset);
+                args.Append("-preset ").Append(nvencPreset).Append(' ');
+            }
+            if (settings.FFmpegCRF > 0)
+            {
+                args.Append("-rc constqp -qp ").Append(settings.FFmpegCRF).Append(' ');
+            }
+            args.Append("-tune hq -b_ref_mode middle -rc-lookahead 32 ");
         }
         else
         {
             // Other GPU encoders (AMF, QSV) - use -qp directly
             args.Append("-c:v ").Append(videoEncoder).Append(' ');
-            args.Append("-qp ").Append(settings.FFmpegCRF).Append(' ');
+            if (settings.FFmpegCRF > 0)
+                args.Append("-qp ").Append(settings.FFmpegCRF).Append(' ');
         }
 
         args.Append("-c:a aac -b:a 128k ");
@@ -306,6 +324,21 @@ public partial class FFmpegService
         args.Append(GetShortPath(outputFile));
         return args.ToString();
     }
+
+    /// <summary>
+    /// Map user-friendly preset names to NVENC integer preset values.
+    /// NVENC presets: 0=slow (2-pass hq), 2=medium (1-pass hq), 3=fast,
+    ///   12=p1(fastest) to 18=p7(slowest/best quality)
+    /// </summary>
+    private int MapPresetToNVENC(string preset) => preset.ToLowerInvariant() switch
+    {
+        "ultrafast" or "superfast" or "veryfast" or "faster" => 3, // fast (hp 1-pass)
+        "fast" => 3,
+        "medium" or "default" => -1, // use FFmpeg default (p4)
+        "slow" or "slower" => 16,     // p5 (slow, good quality)
+        "veryslow" => 18,             // p7 (slowest, best quality)
+        _ => -1                       // unknown, use FFmpeg default
+    };
 
     private record EncodeResult(int ExitCode, string Stderr)
     {

@@ -185,6 +185,7 @@
                                 <ComboBox SelectedValue="{Binding FfmpegPreset}" Width="150"
                                           HorizontalAlignment="Left" Padding="8,4"
                                           SelectedValuePath="Content">
+                                    <ComboBoxItem Content="default"/>
                                     <ComboBoxItem Content="ultrafast"/>
                                     <ComboBoxItem Content="superfast"/>
                                     <ComboBoxItem Content="veryfast"/>
@@ -201,7 +202,7 @@
                                            Width="120" DockPanel.Dock="Left"/>
                                 <TextBox Text="{Binding FfmpegCRF}" Width="80"
                                          HorizontalAlignment="Left" Padding="8,4"/>
-                                <TextBlock Text="(0-51, lower=better, default 23)"
+                                <TextBlock Text="(0=encoder default, 1-51, lower=better, libx264 default=23)"
                                            Foreground="#999999" FontSize="11" Margin="8,0,0,0"
                                            VerticalAlignment="Center"/>
                             </DockPanel>
