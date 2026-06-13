@@ -210,6 +210,17 @@
         <Setter Property="Background" Value="Transparent"/>
     </Style>
 
+    <!-- ToolTip Style - dark background with light text -->
+    <Style TargetType="ToolTip">
+        <Setter Property="Background" Value="#141420"/>
+        <Setter Property="Foreground" Value="#E0E0F0"/>
+        <Setter Property="BorderBrush" Value="#00F0FF"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="FontFamily" Value="Consolas, 'Courier New', 'Microsoft YaHei UI'"/>
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+
     <!-- Window Base Style -->
     <Style x:Key="CustomWindowStyle" TargetType="Window">
         <Setter Property="AllowsTransparency" Value="True"/>

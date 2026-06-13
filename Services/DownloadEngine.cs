@@ -83,16 +83,12 @@ public class DownloadEngine
         catch (OperationCanceledException)
         {
             _logger.LogInformation("Download task cancelled: {TaskId}", task.Id);
-            task.Status = TaskStatus.Cancelled;
-            progress.Report(task);
             throw;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Download task failed: {TaskId}", task.Id);
-            task.Status = TaskStatus.Failed;
             task.ErrorMessage = ex.Message;
-            progress.Report(task);
             throw;
         }
     }

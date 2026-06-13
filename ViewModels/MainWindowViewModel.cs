@@ -83,7 +83,7 @@ public partial class MainWindowViewModel : ObservableObject
                 if (task.Status == TaskStatus.Downloading)
                     _taskManager.PauseTask(task);
                 else if (task.Status == TaskStatus.Paused)
-                    _ = _taskManager.StartTaskAsync(task);
+                    _ = _taskManager.ResumeTaskAsync(task);
             }
         });
         OpenFolderCommand = new RelayCommand<DownloadTask>(task =>
@@ -108,7 +108,7 @@ public partial class MainWindowViewModel : ObservableObject
         {
             if (task == null) return;
 
-            // Only retry segments that actually failed
+            // Reset failed segments to Pending for retry
             foreach (var seg in task.Segments.Where(s => s.Status == SegmentStatus.Failed))
             {
                 seg.Status = SegmentStatus.Pending;
@@ -116,11 +116,14 @@ public partial class MainWindowViewModel : ObservableObject
                 seg.ErrorMessage = "";
             }
 
-            // If all segments completed but merge failed, reset merge progress
             task.MergeProgress = 0;
             task.ErrorMessage = "";
 
-            await _taskManager.StartTaskAsync(task);
+            // Use resume path if task was paused or has existing segments
+            if (task.Status == TaskStatus.Paused)
+                await _taskManager.ResumeTaskAsync(task);
+            else
+                await _taskManager.StartTaskAsync(task);
         });
 
         CheckFFmpegStatus();
@@ -207,7 +210,10 @@ public partial class MainWindowViewModel : ObservableObject
     {
         foreach (var task in Tasks.Where(t => t.Status is TaskStatus.Paused or TaskStatus.Queued))
         {
-            _ = _taskManager.StartTaskAsync(task);
+            if (task.Status == TaskStatus.Paused)
+                _ = _taskManager.ResumeTaskAsync(task);
+            else
+                _ = _taskManager.StartTaskAsync(task);
         }
     }
 

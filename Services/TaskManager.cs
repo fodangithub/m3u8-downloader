@@ -145,11 +145,59 @@ public class TaskManager
             _logger.LogInformation("Created {Count} download segments for task {TaskId}",
                 task.TotalSegments, task.Id);
 
+            // Phase 2+3: Download segments and merge (shared with resume path)
+            await ContinueDownloadAndMergeAsync(task, ct);
+
+            _logger.LogInformation("Task completed: {TaskId} - {FileName}",
+                task.Id, task.FileName);
+        }
+        catch (OperationCanceledException)
+        {
+            // Preserve Paused status if PauseTask already set it
+            if (task.Status != TaskStatus.Paused)
+            {
+                task.Status = TaskStatus.Cancelled;
+                task.StatusText = "Cancelled";
+            }
+            _logger.LogInformation("Task {Status}: {TaskId}", task.Status, task.Id);
+        }
+        catch (Exception ex)
+        {
+            task.Status = TaskStatus.Failed;
+            task.ErrorMessage = ex.Message;
+            task.StatusText = $"Failed: {ex.Message}";
+            _logger.LogError(ex, "Task failed: {TaskId}", task.Id);
+        }
+        finally
+        {
+            if (downloadSlotHeld)
+                _downloadSemaphore.Release();
+            if (mergeSlotHeld)
+                _mergeSemaphore.Release();
+            lock (_lock)
+            {
+                _taskCancellations.Remove(task.Id);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Shared download and merge phase, used by both fresh start and resume paths.
+    /// Assumes the download semaphore slot is already held.
+    /// </summary>
+    private async Task ContinueDownloadAndMergeAsync(DownloadTask task, CancellationToken ct)
+    {
+        bool downloadSlotHeld = true;
+        bool mergeSlotHeld = false;
+
+        try
+        {
             // Phase 2: Download segments
             task.Status = TaskStatus.Downloading;
             task.StatusText = "Downloading...";
-            task.DownloadStartTime = DateTime.UtcNow;
-            _logger.LogDebug("Phase 2: Starting segment downloads for task {TaskId}, concurrency: {Concurrency}",
+            if (!task.DownloadStartTime.HasValue)
+                task.DownloadStartTime = DateTime.UtcNow;
+            _logger.LogDebug("Starting segment downloads for task {TaskId}, concurrency: {Concurrency}",
                 task.Id, _settingsService.Settings.MaxConcurrentSegments);
 
             var progress = new Progress<DownloadTask>(t => _logger.LogDebug("Task {TaskId} progress: {Completed}/{Total}",
@@ -230,22 +278,6 @@ public class TaskManager
 
             var mergeProgress = new Progress<double>(p => task.MergeProgress = p);
             await _mergeService.MergeAsync(task, mergeProgress, ct);
-
-            _logger.LogInformation("Task completed: {TaskId} - {FileName}",
-                task.Id, task.FileName);
-        }
-        catch (OperationCanceledException)
-        {
-            task.Status = TaskStatus.Cancelled;
-            task.StatusText = "Cancelled";
-            _logger.LogInformation("Task cancelled: {TaskId}", task.Id);
-        }
-        catch (Exception ex)
-        {
-            task.Status = TaskStatus.Failed;
-            task.ErrorMessage = ex.Message;
-            task.StatusText = $"Failed: {ex.Message}";
-            _logger.LogError(ex, "Task failed: {TaskId}", task.Id);
         }
         finally
         {
@@ -253,10 +285,76 @@ public class TaskManager
                 _downloadSemaphore.Release();
             if (mergeSlotHeld)
                 _mergeSemaphore.Release();
+        }
+    }
+
+    /// <summary>
+    /// Resume a paused task. Skips M3U8 re-parsing and continues downloading
+    /// from where it left off, preserving already-completed segments.
+    /// </summary>
+    public async Task ResumeTaskAsync(DownloadTask task)
+    {
+        if (task.Status != TaskStatus.Paused)
+            return;
+
+        // Reset in-flight segments (marked Failed by cancellation) back to Pending
+        foreach (var seg in task.Segments)
+        {
+            if (seg.Status is SegmentStatus.Failed or SegmentStatus.Retrying)
+            {
+                seg.Status = SegmentStatus.Pending;
+                seg.RetryCount = 0;
+                seg.ErrorMessage = "";
+            }
+        }
+        task.ErrorMessage = "";
+
+        await _downloadSemaphore.WaitAsync();
+        try
+        {
+            var cts = new CancellationTokenSource();
             lock (_lock)
             {
-                _taskCancellations.Remove(task.Id);
+                _taskCancellations[task.Id] = cts;
             }
+
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await ContinueDownloadAndMergeAsync(task, cts.Token);
+                    _logger.LogInformation("Task resumed and completed: {TaskId}", task.Id);
+                }
+                catch (OperationCanceledException)
+                {
+                    if (task.Status != TaskStatus.Paused)
+                    {
+                        task.Status = TaskStatus.Cancelled;
+                        task.StatusText = "Cancelled";
+                    }
+                    _logger.LogInformation("Task {Status}: {TaskId}", task.Status, task.Id);
+                }
+                catch (Exception ex)
+                {
+                    task.Status = TaskStatus.Failed;
+                    task.ErrorMessage = ex.Message;
+                    task.StatusText = $"Failed: {ex.Message}";
+                    _logger.LogError(ex, "Task failed: {TaskId}", task.Id);
+                }
+                finally
+                {
+                    _downloadSemaphore.Release();
+                    lock (_lock)
+                    {
+                        _taskCancellations.Remove(task.Id);
+                    }
+                }
+            });
+        }
+        catch
+        {
+            _downloadSemaphore.Release();
+            throw;
         }
     }
 
@@ -264,6 +362,17 @@ public class TaskManager
     {
         if (task.Status != TaskStatus.Downloading)
             return;
+
+        // Reset in-flight segments back to Pending so they re-download on resume
+        foreach (var seg in task.Segments)
+        {
+            if (seg.Status is SegmentStatus.Downloading or SegmentStatus.Retrying)
+            {
+                seg.Status = SegmentStatus.Pending;
+                seg.RetryCount = 0;
+                seg.ErrorMessage = "";
+            }
+        }
 
         lock (_lock)
         {
@@ -277,6 +386,7 @@ public class TaskManager
 
         task.Status = TaskStatus.Paused;
         task.StatusText = "Paused";
+        task.DownloadSpeed = 0;
         _logger.LogInformation("Task paused: {TaskId}", task.Id);
     }
 

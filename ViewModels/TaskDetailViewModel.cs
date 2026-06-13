@@ -97,6 +97,10 @@ public partial class TaskDetailViewModel : ObservableObject
         MergeProgress = _task.MergeProgress;
         StatusText = _task.StatusText;
         ErrorMessage = _task.ErrorMessage;
+        OnPropertyChanged(nameof(PauseResumeButtonText));
+        OnPropertyChanged(nameof(CanPauseResume));
+        OnPropertyChanged(nameof(CanCancel));
+        OnPropertyChanged(nameof(CanRetry));
     }
 
     private void TogglePauseResume()
@@ -104,7 +108,7 @@ public partial class TaskDetailViewModel : ObservableObject
         if (_task.Status == TaskStatus.Downloading)
             _taskManager.PauseTask(_task);
         else if (_task.Status == TaskStatus.Paused)
-            _ = _taskManager.StartTaskAsync(_task);
+            _ = _taskManager.ResumeTaskAsync(_task);
     }
 
     private void CancelTask()
@@ -114,19 +118,21 @@ public partial class TaskDetailViewModel : ObservableObject
 
     private async Task RetryFailedAsync()
     {
-        // Only retry segments that are actually failed
         foreach (var segment in _task.Segments.Where(s => s.Status == SegmentStatus.Failed))
         {
             segment.Status = SegmentStatus.Pending;
             segment.RetryCount = 0;
             segment.ErrorMessage = "";
         }
-        await _taskManager.StartTaskAsync(_task);
+
+        if (_task.Status == TaskStatus.Paused)
+            await _taskManager.ResumeTaskAsync(_task);
+        else
+            await _taskManager.StartTaskAsync(_task);
     }
 
     private async Task RetryAllFailedAsync()
     {
-        // Only retry segments that are actually failed (not pending/downloading/retrying)
         foreach (var segment in _task.Segments.Where(s => s.Status == SegmentStatus.Failed))
         {
             segment.Status = SegmentStatus.Pending;
@@ -135,7 +141,11 @@ public partial class TaskDetailViewModel : ObservableObject
         }
         _task.MergeProgress = 0;
         _task.ErrorMessage = "";
-        await _taskManager.StartTaskAsync(_task);
+
+        if (_task.Status == TaskStatus.Paused)
+            await _taskManager.ResumeTaskAsync(_task);
+        else
+            await _taskManager.StartTaskAsync(_task);
     }
 
     private void RetrySegment(int segmentIndex)
@@ -143,18 +153,21 @@ public partial class TaskDetailViewModel : ObservableObject
         var segment = _task.Segments.FirstOrDefault(s => s.Index == segmentIndex);
         if (segment == null) return;
 
-        // Only allow retry of failed segments
         if (segment.Status != SegmentStatus.Failed) return;
 
         segment.Status = SegmentStatus.Pending;
         segment.RetryCount = 0;
         segment.ErrorMessage = "";
 
-        // If task is in failed state, restart it
+        // Restart the task if it's in a state that needs restarting
         if (_task.Status == TaskStatus.Failed)
         {
             _task.ErrorMessage = "";
             _ = _taskManager.StartTaskAsync(_task);
+        }
+        else if (_task.Status == TaskStatus.Paused)
+        {
+            _ = _taskManager.ResumeTaskAsync(_task);
         }
     }
 
