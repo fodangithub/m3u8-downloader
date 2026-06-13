@@ -1,0 +1,66 @@
+## .NET Core
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+*.log
+*.nupkg
+*.user
+*.suo
+*.lock.json
+
+## VS
+.vs/
+*.userprefs
+*.pidb
+
+## JetBrains Rider / ReSharper
+.idea/
+*.sln.DotSettings
+*.sln.DotSettings.user
+*.csproj.DotSettings
+
+## Visual Studio Code
+.vscode/
+
+## Test results
+TestResults/
+coverage/
+
+## Publish
+publish/
+publish_profiles/
+
+## App data
+*.sqlite
+*.db
+temp/
+
+## Windows
+Thumbs.db
+Desktop.ini
+
+## Build
+*.userosscache
+*.shim
+*.nuspec
+*.snupkg
+*.symbols.nupkg
+*.snupkg
+
+## NuGet
+*.nupkg
+*.snupkg
+packages/
+
+## MSTest
+Results*/
+
+## Node (if any frontend tooling)
+node_modules/
+
+## OS
+.DS_Store
+*.swp
+*~

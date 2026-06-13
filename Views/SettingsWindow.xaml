@@ -1,0 +1,263 @@
+<Window x:Class="M3U8Downloader.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:conv="clr-namespace:M3U8Downloader.Converters"
+        xmlns:views="clr-namespace:M3U8Downloader.Views"
+        Title="Settings"
+        Width="600" Height="550"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="Transparent"
+        AllowsTransparency="True"
+        WindowStyle="None">
+
+    <Window.Resources>
+        <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
+
+    <Border Background="#F5F5F5" CornerRadius="12" BorderBrush="#E0E0E0" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Custom Title Bar -->
+            <views:CustomTitleBar Grid.Row="0" TitleText="Settings"/>
+
+            <TabControl Grid.Row="1" Margin="12,0,12,0" Padding="0"
+                        Background="Transparent" BorderThickness="0">
+
+                <!-- General Tab -->
+                <TabItem Header="General">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
+                        <StackPanel>
+                            <TextBlock Text="Save Directory" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <DockPanel>
+                                <Button Content="Browse..." Command="{Binding BrowseSaveDirCommand}"
+                                        DockPanel.Dock="Right" Padding="12,4" Margin="8,0,0,0"/>
+                                <TextBox Text="{Binding SaveDirectory, UpdateSourceTrigger=PropertyChanged}"
+                                         VerticalContentAlignment="Center" Padding="8,4"/>
+                            </DockPanel>
+
+                            <CheckBox Content="Auto-start download when added"
+                                      IsChecked="{Binding AutoStartDownload}" Margin="0,16,0,0"/>
+                            <CheckBox Content="Delete temp files after completion"
+                                      IsChecked="{Binding AutoDeleteTempFiles}" Margin="0,8,0,0"/>
+                            <CheckBox Content="Minimize to system tray"
+                                      IsChecked="{Binding MinimizeToTray}" Margin="0,8,0,0"/>
+                            <CheckBox Content="Play sound on download complete"
+                                      IsChecked="{Binding PlaySoundOnComplete}" Margin="0,8,0,0"/>
+
+                            <TextBlock Text="Duplicate File Handling" FontWeight="SemiBold" Margin="0,16,0,4"/>
+                            <ComboBox SelectedItem="{Binding DuplicateFileAction}"
+                                      HorizontalAlignment="Left" Width="200" Padding="8,4">
+                                <ComboBox.Items>
+                                    <x:Static Member="models:DuplicateFileAction.AutoRename"
+                                              xmlns:models="clr-namespace:M3U8Downloader.Models"/>
+                                    <x:Static Member="models:DuplicateFileAction.Overwrite"
+                                              xmlns:models="clr-namespace:M3U8Downloader.Models"/>
+                                    <x:Static Member="models:DuplicateFileAction.Skip"
+                                              xmlns:models="clr-namespace:M3U8Downloader.Models"/>
+                                </ComboBox.Items>
+                            </ComboBox>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- Network Tab -->
+                <TabItem Header="Network">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
+                        <StackPanel>
+                            <TextBlock Text="Download Concurrency" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <DockPanel Margin="0,0,0,8">
+                                <TextBlock Text="Max concurrent downloads:" VerticalAlignment="Center"
+                                           Width="200" DockPanel.Dock="Left"/>
+                                <TextBox Text="{Binding MaxConcurrentTasks}" Width="80"
+                                         HorizontalAlignment="Left" Padding="8,4"/>
+                            </DockPanel>
+                            <DockPanel Margin="0,0,0,8">
+                                <TextBlock Text="Max concurrent merges:" VerticalAlignment="Center"
+                                           Width="200" DockPanel.Dock="Left"/>
+                                <TextBox Text="{Binding MaxConcurrentMerges}" Width="80"
+                                         HorizontalAlignment="Left" Padding="8,4"/>
+                            </DockPanel>
+                            <DockPanel Margin="0,0,0,8">
+                                <TextBlock Text="Segments per task:" VerticalAlignment="Center"
+                                           Width="200" DockPanel.Dock="Left"/>
+                                <TextBox Text="{Binding MaxConcurrentSegments}" Width="80"
+                                         HorizontalAlignment="Left" Padding="8,4"/>
+                            </DockPanel>
+                            <DockPanel Margin="0,0,0,8">
+                                <TextBlock Text="Retry interval (seconds):" VerticalAlignment="Center"
+                                           Width="200" DockPanel.Dock="Left"/>
+                                <TextBox Text="{Binding RetryIntervalSeconds}" Width="80"
+                                         HorizontalAlignment="Left" Padding="8,4"/>
+                            </DockPanel>
+                            <DockPanel Margin="0,0,0,8">
+                                <TextBlock Text="Max retries (0 = infinite):" VerticalAlignment="Center"
+                                           Width="200" DockPanel.Dock="Left"/>
+                                <TextBox Text="{Binding MaxRetries}" Width="80"
+                                         HorizontalAlignment="Left" Padding="8,4"/>
+                            </DockPanel>
+                            <DockPanel Margin="0,0,0,8">
+                                <TextBlock Text="HTTP timeout (seconds):" VerticalAlignment="Center"
+                                           Width="200" DockPanel.Dock="Left"/>
+                                <TextBox Text="{Binding TimeoutSeconds}" Width="80"
+                                         HorizontalAlignment="Left" Padding="8,4"/>
+                            </DockPanel>
+                            <DockPanel Margin="0,0,0,8">
+                                <TextBlock Text="Speed limit (KB/s, 0=unlimited):" VerticalAlignment="Center"
+                                           Width="200" DockPanel.Dock="Left"/>
+                                <TextBox Text="{Binding SpeedLimitKBps}" Width="80"
+                                         HorizontalAlignment="Left" Padding="8,4"/>
+                            </DockPanel>
+
+                            <Separator Margin="0,16,0,16"/>
+                            <TextBlock Text="Proxy" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <CheckBox Content="Enable proxy"
+                                      IsChecked="{Binding ProxyEnabled}" Margin="0,0,0,8"/>
+
+                            <StackPanel Visibility="{Binding ProxyEnabled, Converter={StaticResource BoolToVis}}">
+                                <DockPanel Margin="0,0,0,8">
+                                    <TextBlock Text="Type:" VerticalAlignment="Center"
+                                               Width="80" DockPanel.Dock="Left"/>
+                                    <ComboBox SelectedValue="{Binding ProxyType}" Width="120"
+                                              HorizontalAlignment="Left" Padding="8,4"
+                                              SelectedValuePath="Content">
+                                        <ComboBoxItem Content="Http"/>
+                                        <ComboBoxItem Content="Socks4"/>
+                                        <ComboBoxItem Content="Socks5"/>
+                                    </ComboBox>
+                                </DockPanel>
+                                <DockPanel Margin="0,0,0,8">
+                                    <TextBlock Text="Host:" VerticalAlignment="Center"
+                                               Width="80" DockPanel.Dock="Left"/>
+                                    <TextBox Text="{Binding ProxyHost}" Padding="8,4"/>
+                                </DockPanel>
+                                <DockPanel Margin="0,0,0,8">
+                                    <TextBlock Text="Port:" VerticalAlignment="Center"
+                                               Width="80" DockPanel.Dock="Left"/>
+                                    <TextBox Text="{Binding ProxyPort}" Width="80"
+                                             HorizontalAlignment="Left" Padding="8,4"/>
+                                </DockPanel>
+                                <DockPanel Margin="0,0,0,8">
+                                    <TextBlock Text="Username:" VerticalAlignment="Center"
+                                               Width="80" DockPanel.Dock="Left"/>
+                                    <TextBox Text="{Binding ProxyUsername}" Padding="8,4"/>
+                                </DockPanel>
+                                <DockPanel Margin="0,0,0,8">
+                                    <TextBlock Text="Password:" VerticalAlignment="Center"
+                                               Width="80" DockPanel.Dock="Left"/>
+                                    <TextBox Text="{Binding ProxyPassword}" Padding="8,4"/>
+                                </DockPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- FFmpeg Tab -->
+                <TabItem Header="FFmpeg">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
+                        <StackPanel>
+                            <TextBlock Text="FFmpeg Path" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <DockPanel>
+                                <Button Content="Browse..." Command="{Binding BrowseFFmpegCommand}"
+                                        DockPanel.Dock="Right" Padding="12,4" Margin="8,0,0,0"/>
+                                <TextBox Text="{Binding FfmpegPath, UpdateSourceTrigger=PropertyChanged}"
+                                         VerticalContentAlignment="Center" Padding="8,4"/>
+                            </DockPanel>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <TextBlock Text="Status: " FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding IsFFmpegInstalled, StringFormat='{}{0}'}"
+                                           Foreground="{Binding IsFFmpegInstalled, Converter={StaticResource BoolToVis}}"/>
+                            </StackPanel>
+                            <TextBlock Text="{Binding FfmpegVersion, StringFormat='Version: {0}'}"
+                                       FontSize="12" Foreground="#757575" Margin="0,4,0,0"
+                                       Visibility="{Binding IsFFmpegInstalled, Converter={StaticResource BoolToVis}}"/>
+
+                            <TextBlock Text="Encoding Settings" FontWeight="SemiBold" Margin="0,24,0,8"/>
+                            <DockPanel Margin="0,0,0,8">
+                                <TextBlock Text="Preset:" VerticalAlignment="Center"
+                                           Width="120" DockPanel.Dock="Left"/>
+                                <ComboBox SelectedValue="{Binding FfmpegPreset}" Width="150"
+                                          HorizontalAlignment="Left" Padding="8,4"
+                                          SelectedValuePath="Content">
+                                    <ComboBoxItem Content="ultrafast"/>
+                                    <ComboBoxItem Content="superfast"/>
+                                    <ComboBoxItem Content="veryfast"/>
+                                    <ComboBoxItem Content="faster"/>
+                                    <ComboBoxItem Content="fast"/>
+                                    <ComboBoxItem Content="medium"/>
+                                    <ComboBoxItem Content="slow"/>
+                                    <ComboBoxItem Content="slower"/>
+                                    <ComboBoxItem Content="veryslow"/>
+                                </ComboBox>
+                            </DockPanel>
+                            <DockPanel Margin="0,0,0,8">
+                                <TextBlock Text="CRF Quality:" VerticalAlignment="Center"
+                                           Width="120" DockPanel.Dock="Left"/>
+                                <TextBox Text="{Binding FfmpegCRF}" Width="80"
+                                         HorizontalAlignment="Left" Padding="8,4"/>
+                                <TextBlock Text="(0-51, lower=better, default 23)"
+                                           Foreground="#999999" FontSize="11" Margin="8,0,0,0"
+                                           VerticalAlignment="Center"/>
+                            </DockPanel>
+
+                            <Separator Margin="0,16,0,16"/>
+                            <TextBlock Text="GPU Acceleration" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <CheckBox Content="Use GPU encoding (if available)"
+                                      IsChecked="{Binding FfmpegUseGPU}" Margin="0,0,0,8"/>
+                            <TextBlock Text="Detected Encoder:" FontSize="12" Foreground="#757575"
+                                       Visibility="{Binding FfmpegUseGPU, Converter={StaticResource BoolToVis}}"/>
+                            <TextBlock Text="{Binding FfmpegGPUEncoder}" FontSize="12" Foreground="#4CAF50"
+                                       Margin="0,4,0,0"
+                                       Visibility="{Binding FfmpegUseGPU, Converter={StaticResource BoolToVis}}"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- HTTP Headers Tab -->
+                <TabItem Header="HTTP Headers">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
+                        <StackPanel>
+                            <TextBlock Text="Default User-Agent" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                            <TextBox Text="{Binding DefaultUserAgent}" TextWrapping="Wrap"
+                                     AcceptsReturn="True" Height="60" Padding="8,4"
+                                     VerticalScrollBarVisibility="Auto"/>
+
+                            <TextBlock Text="Default Referer" FontWeight="SemiBold" Margin="0,16,0,4"/>
+                            <TextBox Text="{Binding DefaultReferer}" Padding="8,4"/>
+
+                            <TextBlock Text="Default Cookies" FontWeight="SemiBold" Margin="0,16,0,4"/>
+                            <TextBox Text="{Binding DefaultCookies}" TextWrapping="Wrap"
+                                     AcceptsReturn="True" Height="60" Padding="8,4"
+                                     VerticalScrollBarVisibility="Auto"/>
+
+                            <TextBlock Text="Note: These headers are used as defaults for all downloads. You can override them per-task."
+                                       TextWrapping="Wrap" Foreground="#999999" FontSize="11"
+                                       Margin="0,16,0,0"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+
+            <!-- Buttons -->
+            <Border Grid.Row="2" Background="White" Padding="12" BorderBrush="#E0E0E0"
+                    BorderThickness="0,1,0,0">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Save" Command="{Binding SaveCommand}"
+                            Padding="24,8" Margin="0,0,8,0"
+                            Background="#2196F3" Foreground="White" BorderThickness="0"
+                            Cursor="Hand" FontSize="13"/>
+                    <Button Content="Cancel" Command="{Binding CancelCommand}"
+                            Padding="24,8"
+                            Background="#BDBDBD" Foreground="White" BorderThickness="0"
+                            Cursor="Hand" FontSize="13"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</Window>
