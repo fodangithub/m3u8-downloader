@@ -26,6 +26,7 @@ public partial class FFmpegService
     /// <summary>
     /// Detect available GPU encoders in FFmpeg. Returns the first one found, or null.
     /// Priority: h264_nvenc (NVIDIA) > h264_amf (AMD) > h264_qsv (Intel Quick Sync)
+    /// Also does a short test encode to verify the GPU is actually functional.
     /// </summary>
     public async Task<string?> DetectGPUEncoderAsync(string ffmpegPath)
     {
@@ -48,10 +49,18 @@ public partial class FFmpegService
             var gpuEncoders = new[] { "h264_nvenc", "h264_amf", "h264_qsv" };
             foreach (var encoder in gpuEncoders)
             {
-                if (output.Contains(encoder))
+                if (!output.Contains(encoder)) continue;
+
+                // Verify GPU encoder actually works with a test encode
+                var works = await TestGPUEncoderAsync(ffmpegPath, encoder);
+                if (works)
                 {
-                    _logger.LogInformation("GPU encoder detected: {Encoder}", encoder);
+                    _logger.LogInformation("GPU encoder detected and verified: {Encoder}", encoder);
                     return encoder;
+                }
+                else
+                {
+                    _logger.LogWarning("GPU encoder {Encoder} listed but failed test encode, skipping", encoder);
                 }
             }
 
@@ -61,6 +70,32 @@ public partial class FFmpegService
         catch
         {
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Test if a GPU encoder actually works by doing a short test encode.
+    /// </summary>
+    private async Task<bool> TestGPUEncoderAsync(string ffmpegPath, string encoder)
+    {
+        try
+        {
+            var args = $"-y -f lavfi -i testsrc=duration=1:size=320x240:rate=30 -c:v {encoder} -f null NUL";
+            var psi = new ProcessStartInfo(ffmpegPath, args)
+            {
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            using var process = Process.Start(psi);
+            if (process == null) return false;
+            await process.WaitForExitAsync();
+            return process.ExitCode == 0;
+        }
+        catch
+        {
+            return false;
         }
     }
 
@@ -135,32 +170,64 @@ public partial class FFmpegService
         // Determine video encoder
         var videoEncoder = DetermineVideoEncoder(settings);
 
-        // Build FFmpeg arguments - use short paths to avoid space/quote issues on Windows
-        var args = new StringBuilder();
-        args.Append("-y "); // Overwrite output
-        args.Append("-f concat -safe 0 ");
-        args.Append("-i ").Append(GetShortPath(concatFile)).Append(' ');
+        // Try encoding; if GPU encoder fails, fall back to libx264
+        var result = await TryEncodeAsync(
+            ffmpegPath, concatFile, tempFile, videoEncoder, settings,
+            progress, totalDurationSeconds, ct);
 
-        if (videoEncoder == "libx264")
+        if (!result.Success && videoEncoder != "libx264")
         {
-            args.Append("-c:v libx264 ");
-            args.Append("-preset ").Append(settings.FFmpegPreset).Append(' ');
-            args.Append("-crf ").Append(settings.FFmpegCRF).Append(' ');
+            _logger.LogWarning("GPU encoder {Encoder} failed, falling back to libx264", videoEncoder);
+            result = await TryEncodeAsync(
+                ffmpegPath, concatFile, tempFile, "libx264", settings,
+                progress, totalDurationSeconds, ct);
+
+            if (result.Success)
+            {
+                // Update settings to avoid future GPU attempts
+                settings.FFmpegUseGPU = false;
+                _settingsService.Save();
+            }
         }
-        else
+
+        if (!result.Success)
         {
-            // GPU encoder - don't use preset/CRF, use -cq for quality
-            args.Append("-c:v ").Append(videoEncoder).Append(' ');
-            args.Append("-cq ").Append(settings.FFmpegCRF).Append(' ');
+            _logger.LogError("FFmpeg failed with exit code {Code}: {Output}",
+                result.ExitCode, result.Stderr);
+            throw new InvalidOperationException($"FFmpeg failed: {result.Stderr.Split('\n').LastOrDefault(l => !string.IsNullOrWhiteSpace(l))}");
         }
 
-        args.Append("-c:a aac -b:a 128k ");
-        args.Append("-movflags +faststart ");
-        args.Append(GetShortPath(tempFile));
+        // Rename temp file to final output name
+        if (File.Exists(tempFile))
+        {
+            // Delete existing output file if any
+            if (File.Exists(outputPath))
+                File.Delete(outputPath);
 
-        _logger.LogInformation("FFmpeg command: {Path} {Args}", ffmpegPath, args.ToString());
+            File.Move(tempFile, outputPath);
+            _logger.LogInformation("Renamed temp file to: {Path}", outputPath);
+        }
 
-        var psi = new ProcessStartInfo(ffmpegPath, args.ToString())
+        progress.Report(100);
+    }
+
+    /// <summary>
+    /// Run a single FFmpeg encode attempt. Returns success status and stderr output.
+    /// </summary>
+    private async Task<EncodeResult> TryEncodeAsync(
+        string ffmpegPath,
+        string concatFile,
+        string outputFile,
+        string videoEncoder,
+        AppSettings settings,
+        IProgress<double> progress,
+        double totalDurationSeconds,
+        CancellationToken ct)
+    {
+        var args = BuildFFmpegArgs(concatFile, outputFile, videoEncoder, settings);
+        _logger.LogInformation("FFmpeg command: {Path} {Args}", ffmpegPath, args);
+
+        var psi = new ProcessStartInfo(ffmpegPath, args)
         {
             RedirectStandardError = true,
             RedirectStandardOutput = true,
@@ -205,26 +272,44 @@ public partial class FFmpegService
         });
 
         var exitCode = await tcs.Task;
+        return new EncodeResult(exitCode, stderrOutput.ToString());
+    }
 
-        if (exitCode != 0)
+    private string BuildFFmpegArgs(string concatFile, string outputFile, string videoEncoder, AppSettings settings)
+    {
+        var args = new StringBuilder();
+        args.Append("-y "); // Overwrite output
+        args.Append("-f concat -safe 0 ");
+        args.Append("-i ").Append(GetShortPath(concatFile)).Append(' ');
+
+        if (videoEncoder == "libx264")
         {
-            _logger.LogError("FFmpeg failed with exit code {Code}: {Output}",
-                exitCode, stderrOutput.ToString());
-            throw new InvalidOperationException($"FFmpeg failed: {stderrOutput.ToString().Split('\n').LastOrDefault(l => !string.IsNullOrWhiteSpace(l))}");
+            args.Append("-c:v libx264 ");
+            args.Append("-preset ").Append(settings.FFmpegPreset).Append(' ');
+            args.Append("-crf ").Append(settings.FFmpegCRF).Append(' ');
+        }
+        else if (videoEncoder == "h264_nvenc")
+        {
+            // NVENC: use -rc constqp -qp for constant quality (works on all recent FFmpeg builds)
+            args.Append("-c:v h264_nvenc ");
+            args.Append("-rc constqp -qp ").Append(settings.FFmpegCRF).Append(' ');
+        }
+        else
+        {
+            // Other GPU encoders (AMF, QSV) - use -qp directly
+            args.Append("-c:v ").Append(videoEncoder).Append(' ');
+            args.Append("-qp ").Append(settings.FFmpegCRF).Append(' ');
         }
 
-        // Rename temp file to final output name
-        if (File.Exists(tempFile))
-        {
-            // Delete existing output file if any
-            if (File.Exists(outputPath))
-                File.Delete(outputPath);
+        args.Append("-c:a aac -b:a 128k ");
+        args.Append("-movflags +faststart ");
+        args.Append(GetShortPath(outputFile));
+        return args.ToString();
+    }
 
-            File.Move(tempFile, outputPath);
-            _logger.LogInformation("Renamed temp file to: {Path}", outputPath);
-        }
-
-        progress.Report(100);
+    private record EncodeResult(int ExitCode, string Stderr)
+    {
+        public bool Success => ExitCode == 0;
     }
 
     public async Task MergeConcatAsync(
