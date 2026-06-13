@@ -23,7 +23,7 @@
         <conv:InverseBoolToVisibilityConverter x:Key="InverseBoolToVis"/>
     </Window.Resources>
 
-    <Border Background="#F5F5F5" CornerRadius="12" BorderBrush="#E0E0E0" BorderThickness="1">
+    <Border Background="#0A0A12" CornerRadius="4" BorderBrush="#1E1E2E" BorderThickness="1">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -36,51 +36,55 @@
             <views:CustomTitleBar Grid.Row="0" TitleText="M3U8 Downloader"/>
 
             <!-- Toolbar -->
-            <Border Grid.Row="1" Background="#FFFFFF" Padding="12,8"
-                    BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
+            <Border Grid.Row="1" Background="#141420" Padding="12,8"
+                    BorderBrush="#1E1E2E" BorderThickness="0,0,0,1">
                 <DockPanel>
-                    <TextBlock Text="M3U8 Downloader" FontSize="18" FontWeight="SemiBold"
-                               VerticalAlignment="Center" Foreground="#333333"/>
+                    <TextBlock Text="M3U8_DOWNLOADER" FontSize="18" FontWeight="Bold"
+                               VerticalAlignment="Center" Foreground="#00F0FF"
+                               FontFamily="Consolas, 'Courier New'"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
-                        <Button Content="+ New Task" Command="{Binding AddTaskCommand}"
+                        <Button Content="+ NEW_TASK" Command="{Binding AddTaskCommand}"
                                 Padding="16,6" Margin="0,0,8,0"
-                                Background="#2196F3" Foreground="White" BorderThickness="0"
-                                Cursor="Hand" FontSize="13"/>
-                        <Button Content="Settings" Command="{Binding OpenSettingsCommand}"
+                                Background="#1000F0FF" Foreground="#00F0FF" BorderBrush="#00F0FF"
+                                BorderThickness="1" Cursor="Hand" FontSize="13"/>
+                        <Button Content="SETTINGS" Command="{Binding OpenSettingsCommand}"
                                 Padding="16,6" Margin="0,0,8,0"
-                                Background="#757575" Foreground="White" BorderThickness="0"
-                                Cursor="Hand" FontSize="13"/>
-                        <Button Content="Start All" Command="{Binding StartAllCommand}"
+                                Background="#10707088" Foreground="#707088" BorderBrush="#707088"
+                                BorderThickness="1" Cursor="Hand" FontSize="13"/>
+                        <Button Content="START_ALL" Command="{Binding StartAllCommand}"
                                 Padding="16,6" Margin="0,0,8,0"
-                                Background="#4CAF50" Foreground="White" BorderThickness="0"
-                                Cursor="Hand" FontSize="13"/>
-                        <Button Content="Pause All" Command="{Binding PauseAllCommand}"
+                                Background="#1000FF6A" Foreground="#00FF6A" BorderBrush="#00FF6A"
+                                BorderThickness="1" Cursor="Hand" FontSize="13"/>
+                        <Button Content="PAUSE_ALL" Command="{Binding PauseAllCommand}"
                                 Padding="16,6"
-                                Background="#FF9800" Foreground="White" BorderThickness="0"
-                                Cursor="Hand" FontSize="13"/>
+                                Background="#10FFD000" Foreground="#FFD000" BorderBrush="#FFD000"
+                                BorderThickness="1" Cursor="Hand" FontSize="13"/>
                     </StackPanel>
                 </DockPanel>
             </Border>
 
             <!-- FFmpeg Download Prompt -->
-            <Border Grid.Row="2" Background="#FFF3E0" Padding="20"
+            <Border Grid.Row="2" Background="#1A1400" Padding="20"
                     Visibility="{Binding ShowFFmpegPrompt, Converter={StaticResource BoolToVis}}"
                     VerticalAlignment="Top" Margin="20,20,20,0"
-                    CornerRadius="8" BorderBrush="#FFB74D" BorderThickness="1">
+                    CornerRadius="2" BorderBrush="#FFD000" BorderThickness="1">
                 <StackPanel>
-                    <TextBlock Text="FFmpeg Not Found" FontSize="16" FontWeight="SemiBold"
-                               Foreground="#E65100" Margin="0,0,0,8"/>
+                    <TextBlock Text="// FFmpeg Not Found" FontSize="16" FontWeight="Bold"
+                               Foreground="#FFD000" Margin="0,0,0,8"
+                               FontFamily="Consolas, 'Courier New'"/>
                     <TextBlock Text="FFmpeg is required for merging and transcoding. Click below to download automatically."
-                               TextWrapping="Wrap" Foreground="#BF360C" Margin="0,0,0,12"/>
-                    <Button Content="Download FFmpeg" Command="{Binding DownloadFFmpegCommand}"
+                               TextWrapping="Wrap" Foreground="#BBA000" Margin="0,0,0,12"
+                               FontFamily="Consolas, 'Courier New'"/>
+                    <Button Content="DOWNLOAD_FFMPEG" Command="{Binding DownloadFFmpegCommand}"
                             Padding="20,8" HorizontalAlignment="Left"
-                            Background="#FF6D00" Foreground="White" BorderThickness="0"
-                            Cursor="Hand" FontSize="14"
+                            Background="#10FFD000" Foreground="#FFD000" BorderBrush="#FFD000"
+                            BorderThickness="1" Cursor="Hand" FontSize="14"
                             Visibility="{Binding IsDownloadingFFmpeg, Converter={StaticResource InverseBoolToVis}}"/>
                     <StackPanel Visibility="{Binding IsDownloadingFFmpeg, Converter={StaticResource BoolToVis}}">
-                        <TextBlock Text="{Binding FfmpegStatusText}" Foreground="#E65100" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding FfmpegStatusText}" Foreground="#FFD000" Margin="0,0,0,4"
+                                   FontFamily="Consolas, 'Courier New'"/>
                         <ProgressBar Value="{Binding FfmpegDownloadProgress}" Height="8"
-                                     Background="#FFE0B2" Foreground="#FF6D00"/>
+                                     Background="#1A1A2E" Foreground="#FFD000"/>
                     </StackPanel>
                 </StackPanel>
             </Border>
@@ -92,8 +96,8 @@
                 <ItemsControl ItemsSource="{Binding Tasks}" Margin="16,12">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="models:DownloadTask">
-                            <Border Background="White" CornerRadius="8" Padding="16,12"
-                                    Margin="0,0,0,8" BorderBrush="#E0E0E0" BorderThickness="1"
+                            <Border Background="#141420" CornerRadius="2" Padding="16,12"
+                                    Margin="0,0,0,8" BorderBrush="#1E1E2E" BorderThickness="1"
                                     Cursor="Hand">
                                 <Border.InputBindings>
                                     <MouseBinding MouseAction="LeftDoubleClick"
@@ -112,37 +116,44 @@
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
                                                     DockPanel.Dock="Right">
                                             <Border Background="{Binding Status, Converter={StaticResource StatusToColor}}"
-                                                    CornerRadius="4" Padding="8,2" Margin="8,0,0,0">
+                                                    CornerRadius="2" Padding="8,2" Margin="8,0,0,0">
                                                 <TextBlock Text="{Binding Status, Converter={StaticResource StatusToText}}"
-                                                           Foreground="White" FontSize="11"/>
+                                                           Foreground="#0A0A12" FontSize="11" FontWeight="Bold"
+                                                           FontFamily="Consolas, 'Courier New'"/>
                                             </Border>
                                         </StackPanel>
                                         <TextBlock Text="{Binding FileName}" FontSize="14" FontWeight="SemiBold"
-                                                   Foreground="#333333" TextTrimming="CharacterEllipsis"
-                                                   TextWrapping="NoWrap"/>
+                                                   Foreground="#E0E0F0" TextTrimming="CharacterEllipsis"
+                                                   TextWrapping="NoWrap"
+                                                   FontFamily="Consolas, 'Courier New'"/>
                                     </DockPanel>
 
                                     <!-- Progress Bar -->
                                     <Grid Grid.Row="1" Margin="0,8,0,4">
                                         <ProgressBar Value="{Binding Progress, Mode=OneWay}"
-                                                     Height="22" Background="#E0E0E0" Foreground="#2196F3"/>
-                                        <!-- Merge progress overlay - purple -->
+                                                     Height="22" Background="#1A1A2E" Foreground="#00F0FF"/>
+                                        <!-- Merge progress overlay -->
                                         <ProgressBar Value="{Binding MergeProgress, Mode=OneWay}"
-                                                     Height="22" Background="Transparent" Foreground="#9C27B0"
+                                                     Height="22" Background="Transparent" Foreground="#B400FF"
                                                      Visibility="{Binding IsMerging, Converter={StaticResource BoolToVis}}"/>
                                         <TextBlock Text="{Binding Progress, StringFormat={}{0:F3}%}"
                                                    HorizontalAlignment="Center" FontSize="11"
-                                                   Foreground="White" VerticalAlignment="Center"
-                                                   Visibility="{Binding IsMerging, Converter={StaticResource InverseBoolToVis}}"/>
-                                        <TextBlock Text="{Binding MergeProgress, StringFormat={}{0:F1}% Merging}"
+                                                   Foreground="#E0E0F0" VerticalAlignment="Center"
+                                                   FontWeight="Bold"
+                                                   Visibility="{Binding IsMerging, Converter={StaticResource InverseBoolToVis}}"
+                                                   FontFamily="Consolas, 'Courier New'"/>
+                                        <TextBlock Text="{Binding MergeProgress, StringFormat={}{0:F1}% MERGING}"
                                                    HorizontalAlignment="Center" FontSize="11"
-                                                   Foreground="White" VerticalAlignment="Center"
-                                                   Visibility="{Binding IsMerging, Converter={StaticResource BoolToVis}}"/>
+                                                   Foreground="#E0E0F0" VerticalAlignment="Center"
+                                                   FontWeight="Bold"
+                                                   Visibility="{Binding IsMerging, Converter={StaticResource BoolToVis}}"
+                                                   FontFamily="Consolas, 'Courier New'"/>
                                     </Grid>
 
                                     <!-- Info Row -->
                                     <DockPanel Grid.Row="2">
-                                        <TextBlock DockPanel.Dock="Left" FontSize="12" Foreground="#999999">
+                                        <TextBlock DockPanel.Dock="Left" FontSize="12" Foreground="#707088"
+                                                   FontFamily="Consolas, 'Courier New'">
                                             <Run Text="{Binding CompletedSegments, Mode=OneWay}"/>/<Run Text="{Binding TotalSegments, Mode=OneWay}"/>
                                             <Run Text=" segments"/>
                                             <Run Text=" | "/>
@@ -153,38 +164,38 @@
                                         </TextBlock>
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
                                                     DockPanel.Dock="Right">
-                                            <Button Content="View" Command="{Binding DataContext.OpenTaskDetailCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                            <Button Content="VIEW" Command="{Binding DataContext.OpenTaskDetailCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                     CommandParameter="{Binding}"
                                                     Padding="10,3" Margin="4,0,0,0"
-                                                    FontSize="11" Background="#E3F2FD" Foreground="#1565C0"
-                                                    BorderThickness="0" Cursor="Hand"/>
-                                            <Button Content="Folder" Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                    FontSize="11" Background="#1000F0FF" Foreground="#00F0FF"
+                                                    BorderBrush="#00F0FF" BorderThickness="1" Cursor="Hand"/>
+                                            <Button Content="FOLDER" Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                     CommandParameter="{Binding}"
                                                     Padding="10,3" Margin="4,0,0,0"
-                                                    FontSize="11" Background="#E8F5E9" Foreground="#2E7D32"
-                                                    BorderThickness="0" Cursor="Hand"/>
+                                                    FontSize="11" Background="#1000FF6A" Foreground="#00FF6A"
+                                                    BorderBrush="#00FF6A" BorderThickness="1" Cursor="Hand"/>
                                             <!-- Retry button for Failed/Cancelled tasks -->
-                                            <Button Content="Retry"
+                                            <Button Content="RETRY"
                                                     Command="{Binding DataContext.RetryTaskCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                     CommandParameter="{Binding}"
                                                     Padding="10,3" Margin="4,0,0,0"
-                                                    FontSize="11" Background="#E3F2FD" Foreground="#1565C0"
-                                                    BorderThickness="0" Cursor="Hand"
+                                                    FontSize="11" Background="#1000F0FF" Foreground="#00F0FF"
+                                                    BorderBrush="#00F0FF" BorderThickness="1" Cursor="Hand"
                                                     Visibility="{Binding IsFailedOrCancelled, Converter={StaticResource BoolToVis}}"/>
                                             <!-- Pause/Resume button for active tasks -->
                                             <Button
                                                     Command="{Binding DataContext.PauseTaskCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                     CommandParameter="{Binding}"
                                                     Padding="10,3" Margin="4,0,0,0"
-                                                    FontSize="11" Background="#FFF3E0" Foreground="#E65100"
-                                                    BorderThickness="0" Cursor="Hand"
+                                                    FontSize="11" Background="#10FFD000" Foreground="#FFD000"
+                                                    BorderBrush="#FFD000" BorderThickness="1" Cursor="Hand"
                                                     Visibility="{Binding IsActiveOrPaused, Converter={StaticResource BoolToVis}}">
                                                 <Button.Style>
                                                     <Style TargetType="Button">
-                                                        <Setter Property="Content" Value="Pause"/>
+                                                        <Setter Property="Content" Value="PAUSE"/>
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding Status}" Value="Paused">
-                                                                <Setter Property="Content" Value="Resume"/>
+                                                                <Setter Property="Content" Value="RESUME"/>
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
@@ -201,23 +212,26 @@
 
             <!-- Empty State -->
             <TextBlock Grid.Row="2"
-                       Text="No download tasks. Click '+ New Task' to add one."
+                       Text="// No download tasks. Click '+ NEW_TASK' to add one."
                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                       FontSize="14" Foreground="#BDBDBD"
+                       FontSize="14" Foreground="#707088"
+                       FontFamily="Consolas, 'Courier New'"
                        Visibility="{Binding Tasks.Count, Converter={StaticResource BoolToVis}, ConverterParameter=inverse, FallbackValue=Visible}"/>
 
             <!-- Status Bar -->
-            <Border Grid.Row="3" Background="#FFFFFF" Padding="12,6"
-                    BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+            <Border Grid.Row="3" Background="#141420" Padding="12,6"
+                    BorderBrush="#1E1E2E" BorderThickness="0,1,0,0">
                 <DockPanel>
-                    <TextBlock DockPanel.Dock="Left" FontSize="12" Foreground="#757575">
-                        <Run Text="Tasks: "/><Run Text="{Binding Tasks.Count, Mode=OneWay}"/>
-                        <Run Text=" | Active: "/><Run Text="{Binding ActiveTaskCount, Mode=OneWay}"/>
-                        <Run Text=" | Completed: "/><Run Text="{Binding CompletedTaskCount, Mode=OneWay}"/>
+                    <TextBlock DockPanel.Dock="Left" FontSize="12" Foreground="#707088"
+                               FontFamily="Consolas, 'Courier New'">
+                        <Run Text="TASKS: "/><Run Text="{Binding Tasks.Count, Mode=OneWay}"/>
+                        <Run Text=" | ACTIVE: "/><Run Text="{Binding ActiveTaskCount, Mode=OneWay}"/>
+                        <Run Text=" | DONE: "/><Run Text="{Binding CompletedTaskCount, Mode=OneWay}"/>
                     </TextBlock>
                     <TextBlock DockPanel.Dock="Right" HorizontalAlignment="Right"
-                               FontSize="12" Foreground="#757575"
-                               Text="{Binding TotalSpeedText, StringFormat=Total Speed: {0}}"/>
+                               FontSize="12" Foreground="#00F0FF"
+                               FontFamily="Consolas, 'Courier New'"
+                               Text="{Binding TotalSpeedText, StringFormat=SPEED: {0}}"/>
                 </DockPanel>
             </Border>
         </Grid>

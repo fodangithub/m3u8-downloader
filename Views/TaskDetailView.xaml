@@ -18,7 +18,7 @@
         <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>
     </Window.Resources>
 
-    <Border Background="#F5F5F5" CornerRadius="12" BorderBrush="#E0E0E0" BorderThickness="1">
+    <Border Background="#0A0A12" CornerRadius="4" BorderBrush="#1E1E2E" BorderThickness="1">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -30,8 +30,8 @@
             <views:CustomTitleBar Grid.Row="0" TitleText="{Binding FileName}"/>
 
             <!-- Header -->
-            <Border Grid.Row="1" Background="White" Padding="16,12"
-                    BorderBrush="#E0E0E0" BorderThickness="0,0,0,1">
+            <Border Grid.Row="1" Background="#141420" Padding="16,12"
+                    BorderBrush="#1E1E2E" BorderThickness="0,0,0,1">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -42,11 +42,12 @@
 
                     <!-- URL (selectable) -->
                     <TextBox Grid.Row="0" Text="{Binding SourceUrl, Mode=OneWay}" FontSize="11"
-                             Foreground="#999999"
+                             Foreground="#707088"
                              Margin="0,4,0,0" IsReadOnly="True" BorderThickness="0"
                              Background="Transparent" Padding="0"
                              TextWrapping="NoWrap"
-                             Cursor="IBeam"/>
+                             Cursor="IBeam"
+                             FontFamily="Consolas, 'Courier New'"/>
 
                     <!-- Progress -->
                     <Grid Grid.Row="1" Margin="0,12,0,8">
@@ -56,23 +57,26 @@
                         </Grid.RowDefinitions>
 
                         <ProgressBar Grid.Row="0" Value="{Binding Progress}" Height="22"
-                                     Background="#E0E0E0" Foreground="#2196F3"/>
+                                     Background="#1A1A2E" Foreground="#00F0FF"/>
 
                         <DockPanel Grid.Row="1" Margin="0,6,0,0">
-                            <TextBlock DockPanel.Dock="Left" FontSize="13" Foreground="#333333">
-                                <Run Text="{Binding Progress, StringFormat={}{0:F1}%, Mode=OneWay}" FontWeight="SemiBold"/>
-                                <Run Text="  |  "/>
+                            <TextBlock DockPanel.Dock="Left" FontSize="13" Foreground="#E0E0F0"
+                                       FontFamily="Consolas, 'Courier New'">
+                                <Run Text="{Binding Progress, StringFormat={}{0:F1}%, Mode=OneWay}" FontWeight="Bold"/>
+                                <Run Text="  |  " Foreground="#707088"/>
                                 <Run Text="{Binding CompletedSegments, Mode=OneWay}"/>/<Run Text="{Binding TotalSegments, Mode=OneWay}"/>
                                 <Run Text=" segments"/>
-                                <Run Text="  |  "/>
+                                <Run Text="  |  " Foreground="#707088"/>
                                 <Run Text="{Binding SizeText, Mode=OneWay}"/>
                             </TextBlock>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
                                         DockPanel.Dock="Right">
                                 <TextBlock Text="{Binding DownloadSpeedText, Mode=OneWay}"
-                                           FontSize="13" Foreground="#4CAF50" Margin="0,0,12,0"/>
+                                           FontSize="13" Foreground="#00FF6A" Margin="0,0,12,0"
+                                           FontWeight="Bold" FontFamily="Consolas, 'Courier New'"/>
                                 <TextBlock Text="{Binding RemainingTimeText, Mode=OneWay}"
-                                           FontSize="13" Foreground="#757575"/>
+                                           FontSize="13" Foreground="#707088"
+                                           FontFamily="Consolas, 'Courier New'"/>
                             </StackPanel>
                         </DockPanel>
                     </Grid>
@@ -80,32 +84,36 @@
                     <!-- Status + Buttons -->
                     <DockPanel Grid.Row="2" VerticalAlignment="Center">
                         <Border Background="{Binding Status, Converter={StaticResource StatusToColor}}"
-                                CornerRadius="4" Padding="8,2" DockPanel.Dock="Left" VerticalAlignment="Center">
+                                CornerRadius="2" Padding="8,2" DockPanel.Dock="Left" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Status, Converter={StaticResource StatusToText}}"
-                                       Foreground="White" FontSize="11" VerticalAlignment="Center"/>
+                                       Foreground="#0A0A12" FontSize="11" FontWeight="Bold"
+                                       VerticalAlignment="Center"
+                                       FontFamily="Consolas, 'Courier New'"/>
                         </Border>
-                        <TextBlock Text="{Binding StatusText}" FontSize="12" Foreground="#757575"
-                                   Margin="12,0,0,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding StatusText}" FontSize="12" Foreground="#707088"
+                                   Margin="12,0,0,0" VerticalAlignment="Center"
+                                   FontFamily="Consolas, 'Courier New'"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
                                     DockPanel.Dock="Right" VerticalAlignment="Center">
                             <Button Content="{Binding PauseResumeButtonText}"
                                     Command="{Binding PauseResumeCommand}"
                                     Padding="16,6" Margin="0,0,8,0"
-                                    Background="#FF9800" Foreground="White" BorderThickness="0"
-                                    Cursor="Hand" FontSize="13"/>
-                            <Button Content="Cancel" Command="{Binding CancelCommand}"
+                                    Background="#10FFD000" Foreground="#FFD000" BorderBrush="#FFD000"
+                                    BorderThickness="1" Cursor="Hand" FontSize="13"/>
+                            <Button Content="CANCEL" Command="{Binding CancelCommand}"
                                     Padding="16,6" Margin="0,0,8,0"
-                                    Background="#F44336" Foreground="White" BorderThickness="0"
-                                    Cursor="Hand" FontSize="13"/>
-                            <Button Content="Retry" Command="{Binding RetryCommand}"
+                                    Background="#10FF0040" Foreground="#FF0040" BorderBrush="#FF0040"
+                                    BorderThickness="1" Cursor="Hand" FontSize="13"/>
+                            <Button Content="RETRY" Command="{Binding RetryCommand}"
                                     Padding="16,6"
-                                    Background="#2196F3" Foreground="White" BorderThickness="0"
-                                    Cursor="Hand" FontSize="13"
+                                    Background="#1000F0FF" Foreground="#00F0FF" BorderBrush="#00F0FF"
+                                    BorderThickness="1" Cursor="Hand" FontSize="13"
                                     Visibility="{Binding CanRetry, Converter={StaticResource BoolToVis}}"/>
                         </StackPanel>
-                        <TextBlock Text="{Binding ErrorMessage}" FontSize="12" Foreground="#F44336"
+                        <TextBlock Text="{Binding ErrorMessage}" FontSize="12" Foreground="#FF0040"
                                    Margin="12,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Right"
-                                   DockPanel.Dock="Right" TextTrimming="CharacterEllipsis"/>
+                                   DockPanel.Dock="Right" TextTrimming="CharacterEllipsis"
+                                   FontFamily="Consolas, 'Courier New'"/>
                     </DockPanel>
                 </Grid>
             </Border>
@@ -118,25 +126,31 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <TextBlock Grid.Row="0" Text="Segment Status" FontSize="14" FontWeight="SemiBold"
-                           Foreground="#333333" Margin="0,0,0,8"/>
+                <TextBlock Grid.Row="0" Text="// SEGMENT_STATUS" FontSize="14" FontWeight="Bold"
+                           Foreground="#00F0FF" Margin="0,0,0,8"
+                           FontFamily="Consolas, 'Courier New'"/>
 
                 <!-- Legend -->
                 <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8" VerticalAlignment="Center">
-                    <Border Width="12" Height="12" Background="#4CAF50" CornerRadius="2" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="Completed" FontSize="11" Foreground="#757575" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                    <Border Width="12" Height="12" Background="#2196F3" CornerRadius="2" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="Downloading" FontSize="11" Foreground="#757575" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                    <Border Width="12" Height="12" Background="#FF9800" CornerRadius="2" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="Retrying" FontSize="11" Foreground="#757575" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                    <Border Width="12" Height="12" Background="#F44336" CornerRadius="2" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="Failed (click to retry)" FontSize="11" Foreground="#757575" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                    <Border Width="12" Height="12" Background="#E0E0E0" CornerRadius="2" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="Pending" FontSize="11" Foreground="#757575" VerticalAlignment="Center"/>
-                    <Button Content="Retry All Failed" Command="{Binding RetryAllCommand}"
+                    <Border Width="12" Height="12" Background="#00FF6A" CornerRadius="1" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Completed" FontSize="11" Foreground="#707088" Margin="0,0,12,0" VerticalAlignment="Center"
+                               FontFamily="Consolas, 'Courier New'"/>
+                    <Border Width="12" Height="12" Background="#00F0FF" CornerRadius="1" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Downloading" FontSize="11" Foreground="#707088" Margin="0,0,12,0" VerticalAlignment="Center"
+                               FontFamily="Consolas, 'Courier New'"/>
+                    <Border Width="12" Height="12" Background="#FFD000" CornerRadius="1" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Retrying" FontSize="11" Foreground="#707088" Margin="0,0,12,0" VerticalAlignment="Center"
+                               FontFamily="Consolas, 'Courier New'"/>
+                    <Border Width="12" Height="12" Background="#FF0040" CornerRadius="1" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Failed (click to retry)" FontSize="11" Foreground="#707088" Margin="0,0,12,0" VerticalAlignment="Center"
+                               FontFamily="Consolas, 'Courier New'"/>
+                    <Border Width="12" Height="12" Background="#1A1A2E" CornerRadius="1" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Pending" FontSize="11" Foreground="#707088" VerticalAlignment="Center"
+                               FontFamily="Consolas, 'Courier New'"/>
+                    <Button Content="RETRY_ALL_FAILED" Command="{Binding RetryAllCommand}"
                             Padding="10,3" Margin="16,0,0,0" FontSize="11"
-                            Background="#E3F2FD" Foreground="#1565C0"
-                            BorderThickness="0" Cursor="Hand" VerticalAlignment="Center"/>
+                            Background="#1000F0FF" Foreground="#00F0FF"
+                            BorderBrush="#00F0FF" BorderThickness="1" Cursor="Hand" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- Segment Visualization (wrapped grid) -->
@@ -151,7 +165,7 @@
                             <DataTemplate>
                                 <Border Width="8" Height="8" Margin="1"
                                         Background="{Binding Status, Converter={StaticResource SegStatusColor}}"
-                                        CornerRadius="1" Cursor="Hand"
+                                        CornerRadius="0" Cursor="Hand"
                                         ToolTip="{Binding Index, StringFormat=Segment #{0} (click to retry if failed)}">
                                     <Border.InputBindings>
                                         <MouseBinding MouseAction="LeftClick"

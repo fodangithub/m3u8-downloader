@@ -13,15 +13,15 @@ public class StatusToColorConverter : IValueConverter
         {
             return status switch
             {
-                TaskStatus.Queued => new SolidColorBrush(Color.FromRgb(158, 158, 158)),
-                TaskStatus.Parsing => new SolidColorBrush(Color.FromRgb(33, 150, 243)),
-                TaskStatus.Downloading => new SolidColorBrush(Color.FromRgb(33, 150, 243)),
-                TaskStatus.Paused => new SolidColorBrush(Color.FromRgb(255, 152, 0)),
-                TaskStatus.Merging => new SolidColorBrush(Color.FromRgb(156, 39, 176)),
-                TaskStatus.Completed => new SolidColorBrush(Color.FromRgb(76, 175, 80)),
-                TaskStatus.Failed => new SolidColorBrush(Color.FromRgb(244, 67, 54)),
-                TaskStatus.Cancelled => new SolidColorBrush(Color.FromRgb(158, 158, 158)),
-                _ => new SolidColorBrush(Color.FromRgb(158, 158, 158))
+                TaskStatus.Queued => new SolidColorBrush(Color.FromRgb(112, 112, 136)),
+                TaskStatus.Parsing => new SolidColorBrush(Color.FromRgb(0, 240, 255)),
+                TaskStatus.Downloading => new SolidColorBrush(Color.FromRgb(0, 240, 255)),
+                TaskStatus.Paused => new SolidColorBrush(Color.FromRgb(255, 208, 0)),
+                TaskStatus.Merging => new SolidColorBrush(Color.FromRgb(180, 0, 255)),
+                TaskStatus.Completed => new SolidColorBrush(Color.FromRgb(0, 255, 106)),
+                TaskStatus.Failed => new SolidColorBrush(Color.FromRgb(255, 0, 64)),
+                TaskStatus.Cancelled => new SolidColorBrush(Color.FromRgb(112, 112, 136)),
+                _ => new SolidColorBrush(Color.FromRgb(112, 112, 136))
             };
         }
         return new SolidColorBrush(Colors.Gray);
@@ -65,11 +65,11 @@ public class SegmentStatusToColorConverter : IValueConverter
         {
             return status switch
             {
-                SegmentStatus.Pending => new SolidColorBrush(Color.FromRgb(224, 224, 224)),
-                SegmentStatus.Downloading => new SolidColorBrush(Color.FromRgb(33, 150, 243)),
-                SegmentStatus.Completed => new SolidColorBrush(Color.FromRgb(76, 175, 80)),
-                SegmentStatus.Failed => new SolidColorBrush(Color.FromRgb(244, 67, 54)),
-                SegmentStatus.Retrying => new SolidColorBrush(Color.FromRgb(255, 152, 0)),
+                SegmentStatus.Pending => new SolidColorBrush(Color.FromRgb(26, 26, 46)),
+                SegmentStatus.Downloading => new SolidColorBrush(Color.FromRgb(0, 240, 255)),
+                SegmentStatus.Completed => new SolidColorBrush(Color.FromRgb(0, 255, 106)),
+                SegmentStatus.Failed => new SolidColorBrush(Color.FromRgb(255, 0, 64)),
+                SegmentStatus.Retrying => new SolidColorBrush(Color.FromRgb(255, 208, 0)),
                 _ => new SolidColorBrush(Colors.Gray)
             };
         }

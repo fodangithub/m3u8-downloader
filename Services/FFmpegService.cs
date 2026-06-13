@@ -80,8 +80,14 @@ public partial class FFmpegService
     {
         try
         {
-            var args = $"-y -f lavfi -i testsrc=duration=1:size=320x240:rate=30 -c:v {encoder} -f null NUL";
-            var psi = new ProcessStartInfo(ffmpegPath, args)
+            var testArgs = encoder switch
+            {
+                "h264_nvenc" => $"-y -f lavfi -i testsrc=duration=1:size=320x240:rate=30 -c:v {encoder} -preset fast -rc vbr -cq 23 -f null NUL",
+                "h264_amf" => $"-y -f lavfi -i testsrc=duration=1:size=320x240:rate=30 -c:v {encoder} -quality balanced -f null NUL",
+                "h264_qsv" => $"-y -init_hw_device qsv=hw -f lavfi -i testsrc=duration=1:size=320x240:rate=30 -c:v {encoder} -global_quality 23 -f null NUL",
+                _ => $"-y -f lavfi -i testsrc=duration=1:size=320x240:rate=30 -c:v {encoder} -f null NUL"
+            };
+            var psi = new ProcessStartInfo(ffmpegPath, testArgs)
             {
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
@@ -277,67 +283,49 @@ public partial class FFmpegService
 
     private string BuildFFmpegArgs(string concatFile, string outputFile, string videoEncoder, AppSettings settings)
     {
-        var args = new StringBuilder();
-        args.Append("-y "); // Overwrite output
-        args.Append("-f concat -safe 0 ");
-        args.Append("-i ").Append(GetShortPath(concatFile)).Append(' ');
-
-        if (videoEncoder == "libx264")
-        {
-            args.Append("-c:v libx264 ");
-            if (settings.FFmpegPreset != "default")
-                args.Append("-preset ").Append(settings.FFmpegPreset).Append(' ');
-            if (settings.FFmpegCRF > 0)
-                args.Append("-crf ").Append(settings.FFmpegCRF).Append(' ');
-            else
-                args.Append("-crf 23 "); // FFmpeg default for libx264
-        }
-        else if (videoEncoder == "h264_nvenc")
-        {
-            // NVENC best practices (Super User 1296374):
-            // -rc constqp for constant quality (equivalent to CRF), or -rc vbr with -cq for VBR
-            // -preset p5/p6/p7 for better quality, or omit for default (p4)
-            // -tune hq, -b_ref_mode middle, -rc-lookahead 32 for quality tuning
-            args.Append("-c:v h264_nvenc ");
-            if (settings.FFmpegPreset != "default")
-            {
-                // Map string presets to NVENC integer presets
-                var nvencPreset = MapPresetToNVENC(settings.FFmpegPreset);
-                args.Append("-preset ").Append(nvencPreset).Append(' ');
-            }
-            if (settings.FFmpegCRF > 0)
-            {
-                args.Append("-rc constqp -qp ").Append(settings.FFmpegCRF).Append(' ');
-            }
-            args.Append("-tune hq -b_ref_mode middle -rc-lookahead 32 ");
-        }
-        else
-        {
-            // Other GPU encoders (AMF, QSV) - use -qp directly
-            args.Append("-c:v ").Append(videoEncoder).Append(' ');
-            if (settings.FFmpegCRF > 0)
-                args.Append("-qp ").Append(settings.FFmpegCRF).Append(' ');
-        }
-
-        args.Append("-c:a aac -b:a 128k ");
-        args.Append("-movflags +faststart ");
-        args.Append(GetShortPath(outputFile));
-        return args.ToString();
+        var encoderArgs = BuildEncoderArgs(videoEncoder, settings, includeInitDevice: true);
+        return $"-y -f concat -safe 0 -i {GetShortPath(concatFile)} {encoderArgs} " +
+               $"-c:a aac -b:a 128k -movflags +faststart {GetShortPath(outputFile)}";
     }
 
     /// <summary>
-    /// Map user-friendly preset names to NVENC integer preset values.
-    /// NVENC presets: 0=slow (2-pass hq), 2=medium (1-pass hq), 3=fast,
-    ///   12=p1(fastest) to 18=p7(slowest/best quality)
+    /// Build encoder-specific FFmpeg arguments for video encoding.
+    /// Shared between MergeAndTranscode and MergeAndRemux paths.
     /// </summary>
-    private int MapPresetToNVENC(string preset) => preset.ToLowerInvariant() switch
+    private static string BuildEncoderArgs(string videoEncoder, AppSettings settings, bool includeInitDevice)
     {
-        "ultrafast" or "superfast" or "veryfast" or "faster" => 3, // fast (hp 1-pass)
-        "fast" => 3,
-        "medium" or "default" => -1, // use FFmpeg default (p4)
-        "slow" or "slower" => 16,     // p5 (slow, good quality)
-        "veryslow" => 18,             // p7 (slowest, best quality)
-        _ => -1                       // unknown, use FFmpeg default
+        if (videoEncoder == "libx264")
+        {
+            var preset = settings.FFmpegPreset != "default" ? $"-preset {settings.FFmpegPreset} " : "";
+            var crf = settings.FFmpegCRF > 0 ? settings.FFmpegCRF : 23;
+            return $"-c:v libx264 {preset}-crf {crf}";
+        }
+        else if (videoEncoder == "h264_nvenc")
+        {
+            var preset = MapPresetToNVENCStatic(settings.FFmpegPreset);
+            var cq = settings.FFmpegCRF > 0 ? settings.FFmpegCRF : 23;
+            return $"-c:v h264_nvenc -preset {preset} -rc vbr -cq {cq}";
+        }
+        else if (videoEncoder == "h264_amf")
+        {
+            return "-c:v h264_amf -quality balanced";
+        }
+        else if (videoEncoder == "h264_qsv")
+        {
+            var preset = settings.FFmpegPreset != "default" ? $"-preset {settings.FFmpegPreset} " : "";
+            var quality = settings.FFmpegCRF > 0 ? settings.FFmpegCRF : 23;
+            var initDevice = includeInitDevice ? "-init_hw_device qsv=hw " : "";
+            return $"{initDevice}-c:v h264_qsv {preset}-global_quality {quality}";
+        }
+        return $"-c:v {videoEncoder}";
+    }
+
+    private static string MapPresetToNVENCStatic(string preset) => preset.ToLowerInvariant() switch
+    {
+        "ultrafast" or "superfast" or "veryfast" or "faster" => "fast",
+        "slow" => "slow",
+        "slower" or "veryslow" => "slow",
+        _ => "medium"
     };
 
     private record EncodeResult(int ExitCode, string Stderr)
@@ -386,9 +374,7 @@ public partial class FFmpegService
             Directory.CreateDirectory(outputDir);
 
         var videoEncoder = DetermineVideoEncoder(settings);
-        var encoderArgs = videoEncoder == "libx264"
-            ? $"-c:v libx264 -preset {settings.FFmpegPreset} -crf {settings.FFmpegCRF}"
-            : $"-c:v {videoEncoder} -cq {settings.FFmpegCRF}";
+        var encoderArgs = BuildEncoderArgs(videoEncoder, settings, includeInitDevice: true);
 
         var args = $"-y -i {GetShortPath(videoFile)} -i {GetShortPath(audioFile)} " +
                    $"{encoderArgs} " +

@@ -15,7 +15,7 @@
         <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>
     </Window.Resources>
 
-    <Border Background="#F5F5F5" CornerRadius="12" BorderBrush="#E0E0E0" BorderThickness="1">
+    <Border Background="#0A0A12" CornerRadius="4" BorderBrush="#1E1E2E" BorderThickness="1">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -29,30 +29,33 @@
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20,16">
                 <StackPanel>
                     <!-- URL -->
-                    <TextBlock Text="M3U8 URL" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                    <TextBlock Text="M3U8_URL" FontWeight="Bold" Margin="0,0,0,4"
+                               Foreground="#00F0FF" FontFamily="Consolas, 'Courier New'"/>
                     <DockPanel>
-                        <Button Content="Paste" Command="{Binding PasteUrlCommand}"
+                        <Button Content="PASTE" Command="{Binding PasteUrlCommand}"
                                 DockPanel.Dock="Right" Padding="12,4" Margin="8,0,0,0"
-                                Background="#757575" Foreground="White" BorderThickness="0"
-                                Cursor="Hand" FontSize="13"/>
+                                Background="#10707088" Foreground="#707088" BorderBrush="#707088"
+                                BorderThickness="1" Cursor="Hand" FontSize="13"/>
                         <TextBox Text="{Binding M3u8Url, UpdateSourceTrigger=PropertyChanged}"
                                  Padding="8,6" FontSize="13"/>
                     </DockPanel>
 
                     <!-- Parse button -->
-                    <Button Content="Parse URL" Command="{Binding ParseCommand}"
+                    <Button Content="PARSE_URL" Command="{Binding ParseCommand}"
                             Padding="16,6" Margin="0,8,0,0" HorizontalAlignment="Left"
-                            Background="#2196F3" Foreground="White" BorderThickness="0"
-                            Cursor="Hand" FontSize="13"/>
+                            Background="#1000F0FF" Foreground="#00F0FF" BorderBrush="#00F0FF"
+                            BorderThickness="1" Cursor="Hand" FontSize="13"/>
 
                     <!-- Parse Status -->
                     <TextBlock Text="{Binding ParseStatusText}" Margin="0,8,0,0"
-                               FontSize="12" Foreground="#757575" TextWrapping="Wrap"/>
+                               FontSize="12" Foreground="#707088" TextWrapping="Wrap"
+                               FontFamily="Consolas, 'Courier New'"/>
 
                     <!-- Variant Selection -->
                     <StackPanel Visibility="{Binding HasVariants, Converter={StaticResource BoolToVis}}"
                                 Margin="0,12,0,0">
-                        <TextBlock Text="Select Quality" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                        <TextBlock Text="SELECT_QUALITY" FontWeight="Bold" Margin="0,0,0,4"
+                                   Foreground="#00F0FF" FontFamily="Consolas, 'Courier New'"/>
                         <ComboBox ItemsSource="{Binding Variants}"
                                   SelectedIndex="{Binding SelectedVariantIndex}"
                                   DisplayMemberPath="DisplayName"
@@ -60,39 +63,48 @@
                     </StackPanel>
 
                     <!-- Segment Info -->
-                    <TextBlock Text="{Binding SegmentInfoText}" FontSize="12" Foreground="#4CAF50"
-                               Margin="0,8,0,0"/>
+                    <TextBlock Text="{Binding SegmentInfoText}" FontSize="12" Foreground="#00FF6A"
+                               Margin="0,8,0,0" FontFamily="Consolas, 'Courier New'"/>
 
-                    <Separator Margin="0,16,0,16"/>
+                    <Separator Margin="0,16,0,16" Background="#1E1E2E"/>
 
                     <!-- File Name -->
-                    <TextBlock Text="File Name (optional - auto-detected from URL if empty)"
-                               FontWeight="SemiBold" Margin="0,0,0,4"/>
+                    <TextBlock Text="FILE_NAME (optional - auto-detected if empty)"
+                               FontWeight="Bold" Margin="0,0,0,4"
+                               Foreground="#00F0FF" FontFamily="Consolas, 'Courier New'"/>
                     <TextBox Text="{Binding FileName, UpdateSourceTrigger=PropertyChanged}"
                              Padding="8,6"/>
 
                     <!-- Save Directory -->
-                    <TextBlock Text="Save Directory (optional - uses default if empty)"
-                               FontWeight="SemiBold" Margin="0,12,0,4"/>
+                    <TextBlock Text="SAVE_DIR (optional - uses default if empty)"
+                               FontWeight="Bold" Margin="0,12,0,4"
+                               Foreground="#00F0FF" FontFamily="Consolas, 'Courier New'"/>
                     <DockPanel>
-                        <Button Content="Browse..." Command="{Binding BrowseDirCommand}"
-                                DockPanel.Dock="Right" Padding="12,4" Margin="8,0,0,0"/>
+                        <Button Content="BROWSE" Command="{Binding BrowseDirCommand}"
+                                DockPanel.Dock="Right" Padding="12,4" Margin="8,0,0,0"
+                                Background="#10707088" Foreground="#707088" BorderBrush="#707088"
+                                BorderThickness="1"/>
                         <TextBox Text="{Binding SaveDirectory, UpdateSourceTrigger=PropertyChanged}"
                                  Padding="8,6" VerticalContentAlignment="Center"/>
                     </DockPanel>
 
-                    <Separator Margin="0,16,0,16"/>
+                    <Separator Margin="0,16,0,16" Background="#1E1E2E"/>
 
                     <!-- Advanced HTTP Headers -->
-                    <Expander Header="Advanced HTTP Headers" Margin="0,0,0,0">
+                    <Expander Header="ADVANCED_HTTP_HEADERS" Margin="0,0,0,0"
+                              Foreground="#00F0FF" FontWeight="Bold"
+                              FontFamily="Consolas, 'Courier New'">
                         <StackPanel Margin="0,8,0,0">
-                            <TextBlock Text="User-Agent" FontSize="12" Foreground="#757575" Margin="0,0,0,2"/>
+                            <TextBlock Text="User-Agent" FontSize="12" Foreground="#707088" Margin="0,0,0,2"
+                                       FontFamily="Consolas, 'Courier New'"/>
                             <TextBox Text="{Binding CustomUserAgent}" Padding="6,4" Margin="0,0,0,8"/>
 
-                            <TextBlock Text="Referer" FontSize="12" Foreground="#757575" Margin="0,0,0,2"/>
+                            <TextBlock Text="Referer" FontSize="12" Foreground="#707088" Margin="0,0,0,2"
+                                       FontFamily="Consolas, 'Courier New'"/>
                             <TextBox Text="{Binding CustomReferer}" Padding="6,4" Margin="0,0,0,8"/>
 
-                            <TextBlock Text="Cookie" FontSize="12" Foreground="#757575" Margin="0,0,0,2"/>
+                            <TextBlock Text="Cookie" FontSize="12" Foreground="#707088" Margin="0,0,0,2"
+                                       FontFamily="Consolas, 'Courier New'"/>
                             <TextBox Text="{Binding CustomCookies}" Padding="6,4"/>
                         </StackPanel>
                     </Expander>
@@ -100,17 +112,17 @@
             </ScrollViewer>
 
             <!-- Buttons -->
-            <Border Grid.Row="2" Background="White" Padding="16,12"
-                    BorderBrush="#E0E0E0" BorderThickness="0,1,0,0">
+            <Border Grid.Row="2" Background="#141420" Padding="16,12"
+                    BorderBrush="#1E1E2E" BorderThickness="0,1,0,0">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="Download" Command="{Binding DownloadCommand}"
+                    <Button Content="DOWNLOAD" Command="{Binding DownloadCommand}"
                             Padding="24,8" Margin="0,0,8,0"
-                            Background="#4CAF50" Foreground="White" BorderThickness="0"
-                            Cursor="Hand" FontSize="13"/>
-                    <Button Content="Cancel" Command="{Binding CancelCommand}"
+                            Background="#1000FF6A" Foreground="#00FF6A" BorderBrush="#00FF6A"
+                            BorderThickness="1" Cursor="Hand" FontSize="13"/>
+                    <Button Content="CANCEL" Command="{Binding CancelCommand}"
                             Padding="24,8"
-                            Background="#BDBDBD" Foreground="White" BorderThickness="0"
-                            Cursor="Hand" FontSize="13"/>
+                            Background="#10707088" Foreground="#707088" BorderBrush="#707088"
+                            BorderThickness="1" Cursor="Hand" FontSize="13"/>
                 </StackPanel>
             </Border>
         </Grid>
