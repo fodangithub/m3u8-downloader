@@ -148,7 +148,7 @@ public partial class TaskDetailViewModel : ObservableObject
             await _taskManager.StartTaskAsync(_task);
     }
 
-    private void RetrySegment(object parameter)
+    private void RetrySegment(object? parameter)
     {
         if (parameter == null) return;
         int segmentIndex;

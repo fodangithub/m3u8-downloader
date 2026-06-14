@@ -18,7 +18,7 @@
         <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>
     </Window.Resources>
 
-    <Border Background="#0A0A12" CornerRadius="4" BorderBrush="#1E1E2E" BorderThickness="1">
+    <Border Background="{DynamicResource BackgroundBrush}" CornerRadius="4" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -30,8 +30,8 @@
             <views:CustomTitleBar Grid.Row="0" TitleText="{Binding FileName}"/>
 
             <!-- Header -->
-            <Border Grid.Row="1" Background="#141420" Padding="16,12"
-                    BorderBrush="#1E1E2E" BorderThickness="0,0,0,1">
+            <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}" Padding="16,12"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -42,7 +42,7 @@
 
                     <!-- URL (selectable) -->
                     <TextBox Grid.Row="0" Text="{Binding SourceUrl, Mode=OneWay}" FontSize="11"
-                             Foreground="#707088"
+                             Foreground="{DynamicResource TextSecondaryBrush}"
                              Margin="0,4,0,0" IsReadOnly="True" BorderThickness="0"
                              Background="Transparent" Padding="0"
                              TextWrapping="NoWrap"
@@ -57,25 +57,25 @@
                         </Grid.RowDefinitions>
 
                         <ProgressBar Grid.Row="0" Value="{Binding Progress}" Height="22"
-                                     Background="#1A1A2E" Foreground="#00F0FF"/>
+                                     Background="{DynamicResource HoverBrush}" Foreground="{DynamicResource PrimaryBrush}"/>
 
                         <DockPanel Grid.Row="1" Margin="0,6,0,0">
-                            <TextBlock DockPanel.Dock="Left" FontSize="13" Foreground="#E0E0F0"
+                            <TextBlock DockPanel.Dock="Left" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}"
                                        FontFamily="Consolas, 'Courier New'">
                                 <Run Text="{Binding Progress, StringFormat={}{0:F1}%, Mode=OneWay}" FontWeight="Bold"/>
-                                <Run Text="  |  " Foreground="#707088"/>
+                                <Run Text="  |  " Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <Run Text="{Binding CompletedSegments, Mode=OneWay}"/>/<Run Text="{Binding TotalSegments, Mode=OneWay}"/>
                                 <Run Text=" segments"/>
-                                <Run Text="  |  " Foreground="#707088"/>
+                                <Run Text="  |  " Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 <Run Text="{Binding SizeText, Mode=OneWay}"/>
                             </TextBlock>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
                                         DockPanel.Dock="Right">
                                 <TextBlock Text="{Binding DownloadSpeedText, Mode=OneWay}"
-                                           FontSize="13" Foreground="#00FF6A" Margin="0,0,12,0"
+                                           FontSize="13" Foreground="{DynamicResource SuccessBrush}" Margin="0,0,12,0"
                                            FontWeight="Bold" FontFamily="Consolas, 'Courier New'"/>
                                 <TextBlock Text="{Binding RemainingTimeText, Mode=OneWay}"
-                                           FontSize="13" Foreground="#707088"
+                                           FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}"
                                            FontFamily="Consolas, 'Courier New'"/>
                             </StackPanel>
                         </DockPanel>
@@ -86,11 +86,11 @@
                         <Border Background="{Binding Status, Converter={StaticResource StatusToColor}}"
                                 CornerRadius="2" Padding="8,2" DockPanel.Dock="Left" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Status, Converter={StaticResource StatusToText}}"
-                                       Foreground="#0A0A12" FontSize="11" FontWeight="Bold"
+                                       Foreground="{DynamicResource BackgroundBrush}" FontSize="11" FontWeight="Bold"
                                        VerticalAlignment="Center"
                                        FontFamily="Consolas, 'Courier New'"/>
                         </Border>
-                        <TextBlock Text="{Binding StatusText}" FontSize="12" Foreground="#707088"
+                        <TextBlock Text="{Binding StatusText}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
                                    Margin="12,0,0,0" VerticalAlignment="Center"
                                    FontFamily="Consolas, 'Courier New'"/>
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
@@ -98,19 +98,19 @@
                             <Button Content="{Binding PauseResumeButtonText}"
                                     Command="{Binding PauseResumeCommand}"
                                     Padding="16,6" Margin="0,0,8,0"
-                                    Background="#10FFD000" Foreground="#FFD000" BorderBrush="#FFD000"
+                                    Background="{DynamicResource WarningButtonBg}" Foreground="{DynamicResource WarningBrush}" BorderBrush="{DynamicResource WarningBrush}"
                                     BorderThickness="1" Cursor="Hand" FontSize="13"/>
                             <Button Content="CANCEL" Command="{Binding CancelCommand}"
                                     Padding="16,6" Margin="0,0,8,0"
-                                    Background="#10FF0040" Foreground="#FF0040" BorderBrush="#FF0040"
+                                    Background="{DynamicResource ErrorButtonBg}" Foreground="{DynamicResource ErrorBrush}" BorderBrush="{DynamicResource ErrorBrush}"
                                     BorderThickness="1" Cursor="Hand" FontSize="13"/>
                             <Button Content="RETRY" Command="{Binding RetryCommand}"
                                     Padding="16,6"
-                                    Background="#1000F0FF" Foreground="#00F0FF" BorderBrush="#00F0FF"
+                                    Background="{DynamicResource PrimaryButtonBg}" Foreground="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}"
                                     BorderThickness="1" Cursor="Hand" FontSize="13"
                                     Visibility="{Binding CanRetry, Converter={StaticResource BoolToVis}}"/>
                         </StackPanel>
-                        <TextBlock Text="{Binding ErrorMessage}" FontSize="12" Foreground="#FF0040"
+                        <TextBlock Text="{Binding ErrorMessage}" FontSize="12" Foreground="{DynamicResource ErrorBrush}"
                                    Margin="12,0,0,0" VerticalAlignment="Center" HorizontalAlignment="Right"
                                    DockPanel.Dock="Right" TextTrimming="CharacterEllipsis"
                                    FontFamily="Consolas, 'Courier New'"/>
@@ -127,30 +127,30 @@
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Row="0" Text="// SEGMENTS (click any block to re-download)" FontSize="14" FontWeight="Bold"
-                           Foreground="#00F0FF" Margin="0,0,0,8"
+                           Foreground="{DynamicResource PrimaryBrush}" Margin="0,0,0,8"
                            FontFamily="Consolas, 'Courier New'"/>
 
                 <!-- Legend -->
                 <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8" VerticalAlignment="Center">
-                    <Border Width="12" Height="12" Background="#00FF6A" CornerRadius="1" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="Completed" FontSize="11" Foreground="#707088" Margin="0,0,12,0" VerticalAlignment="Center"
+                    <Border Width="12" Height="12" Background="{DynamicResource SuccessBrush}" CornerRadius="1" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Completed" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,12,0" VerticalAlignment="Center"
                                FontFamily="Consolas, 'Courier New'"/>
-                    <Border Width="12" Height="12" Background="#00F0FF" CornerRadius="1" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="Downloading" FontSize="11" Foreground="#707088" Margin="0,0,12,0" VerticalAlignment="Center"
+                    <Border Width="12" Height="12" Background="{DynamicResource PrimaryBrush}" CornerRadius="1" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Downloading" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,12,0" VerticalAlignment="Center"
                                FontFamily="Consolas, 'Courier New'"/>
-                    <Border Width="12" Height="12" Background="#FFD000" CornerRadius="1" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="Retrying" FontSize="11" Foreground="#707088" Margin="0,0,12,0" VerticalAlignment="Center"
+                    <Border Width="12" Height="12" Background="{DynamicResource WarningBrush}" CornerRadius="1" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Retrying" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,12,0" VerticalAlignment="Center"
                                FontFamily="Consolas, 'Courier New'"/>
-                    <Border Width="12" Height="12" Background="#FF0040" CornerRadius="1" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="Failed" FontSize="11" Foreground="#707088" Margin="0,0,12,0" VerticalAlignment="Center"
+                    <Border Width="12" Height="12" Background="{DynamicResource ErrorBrush}" CornerRadius="1" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Failed" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,12,0" VerticalAlignment="Center"
                                FontFamily="Consolas, 'Courier New'"/>
-                    <Border Width="12" Height="12" Background="#1A1A2E" CornerRadius="1" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="Pending" FontSize="11" Foreground="#707088" VerticalAlignment="Center"
+                    <Border Width="12" Height="12" Background="{DynamicResource HoverBrush}" CornerRadius="1" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Pending" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"
                                FontFamily="Consolas, 'Courier New'"/>
                     <Button Content="RETRY_ALL_FAILED" Command="{Binding RetryAllCommand}"
                             Padding="10,3" Margin="16,0,0,0" FontSize="11"
-                            Background="#1000F0FF" Foreground="#00F0FF"
-                            BorderBrush="#00F0FF" BorderThickness="1" Cursor="Hand" VerticalAlignment="Center"/>
+                            Background="{DynamicResource PrimaryButtonBg}" Foreground="{DynamicResource PrimaryBrush}"
+                            BorderBrush="{DynamicResource PrimaryBrush}" BorderThickness="1" Cursor="Hand" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- Segment Visualization (wrapped grid) -->

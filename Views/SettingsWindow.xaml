@@ -15,7 +15,7 @@
         <conv:BoolToVisibilityConverter x:Key="BoolToVis"/>
     </Window.Resources>
 
-    <Border Background="#0A0A12" CornerRadius="4" BorderBrush="#1E1E2E" BorderThickness="1">
+    <Border Background="{DynamicResource BackgroundBrush}" CornerRadius="4" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -34,11 +34,11 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
                         <StackPanel>
                             <TextBlock Text="SAVE_DIRECTORY" FontWeight="Bold" Margin="0,0,0,4"
-                                       Foreground="#00F0FF" FontFamily="Consolas, 'Courier New'"/>
+                                       Foreground="{DynamicResource PrimaryBrush}" FontFamily="Consolas, 'Courier New'"/>
                             <DockPanel>
                                 <Button Content="BROWSE" Command="{Binding BrowseSaveDirCommand}"
                                         DockPanel.Dock="Right" Padding="12,4" Margin="8,0,0,0"
-                                        Background="#10707088" Foreground="#707088" BorderBrush="#707088"
+                                        Background="{DynamicResource SecondaryButtonBg}" Foreground="{DynamicResource TextSecondaryBrush}" BorderBrush="{DynamicResource TextSecondaryBrush}"
                                         BorderThickness="1"/>
                                 <TextBox Text="{Binding SaveDirectory, UpdateSourceTrigger=PropertyChanged}"
                                          VerticalContentAlignment="Center" Padding="8,4"/>
@@ -54,7 +54,7 @@
                                       IsChecked="{Binding PlaySoundOnComplete}" Margin="0,8,0,0"/>
 
                             <TextBlock Text="DUPLICATE_FILE_HANDLING" FontWeight="Bold" Margin="0,16,0,4"
-                                       Foreground="#00F0FF" FontFamily="Consolas, 'Courier New'"/>
+                                       Foreground="{DynamicResource PrimaryBrush}" FontFamily="Consolas, 'Courier New'"/>
                             <ComboBox SelectedItem="{Binding DuplicateFileAction}"
                                       HorizontalAlignment="Left" Width="200" Padding="8,4">
                                 <ComboBox.Items>
@@ -75,67 +75,67 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
                         <StackPanel>
                             <TextBlock Text="DOWNLOAD_CONCURRENCY" FontWeight="Bold" Margin="0,0,0,4"
-                                       Foreground="#00F0FF" FontFamily="Consolas, 'Courier New'"/>
+                                       Foreground="{DynamicResource PrimaryBrush}" FontFamily="Consolas, 'Courier New'"/>
                             <DockPanel Margin="0,0,0,8">
                                 <TextBlock Text="Max concurrent downloads:" VerticalAlignment="Center"
-                                           Width="200" DockPanel.Dock="Left" Foreground="#E0E0F0"
+                                           Width="200" DockPanel.Dock="Left" Foreground="{DynamicResource TextPrimaryBrush}"
                                            FontFamily="Consolas, 'Courier New'"/>
                                 <TextBox Text="{Binding MaxConcurrentTasks}" Width="80"
                                          HorizontalAlignment="Left" Padding="8,4"/>
                             </DockPanel>
                             <DockPanel Margin="0,0,0,8">
                                 <TextBlock Text="Max concurrent merges:" VerticalAlignment="Center"
-                                           Width="200" DockPanel.Dock="Left" Foreground="#E0E0F0"
+                                           Width="200" DockPanel.Dock="Left" Foreground="{DynamicResource TextPrimaryBrush}"
                                            FontFamily="Consolas, 'Courier New'"/>
                                 <TextBox Text="{Binding MaxConcurrentMerges}" Width="80"
                                          HorizontalAlignment="Left" Padding="8,4"/>
                             </DockPanel>
                             <DockPanel Margin="0,0,0,8">
                                 <TextBlock Text="Segments per task:" VerticalAlignment="Center"
-                                           Width="200" DockPanel.Dock="Left" Foreground="#E0E0F0"
+                                           Width="200" DockPanel.Dock="Left" Foreground="{DynamicResource TextPrimaryBrush}"
                                            FontFamily="Consolas, 'Courier New'"/>
                                 <TextBox Text="{Binding MaxConcurrentSegments}" Width="80"
                                          HorizontalAlignment="Left" Padding="8,4"/>
                             </DockPanel>
                             <DockPanel Margin="0,0,0,8">
                                 <TextBlock Text="Retry interval (sec):" VerticalAlignment="Center"
-                                           Width="200" DockPanel.Dock="Left" Foreground="#E0E0F0"
+                                           Width="200" DockPanel.Dock="Left" Foreground="{DynamicResource TextPrimaryBrush}"
                                            FontFamily="Consolas, 'Courier New'"/>
                                 <TextBox Text="{Binding RetryIntervalSeconds}" Width="80"
                                          HorizontalAlignment="Left" Padding="8,4"/>
                             </DockPanel>
                             <DockPanel Margin="0,0,0,8">
                                 <TextBlock Text="Max retries (0=inf):" VerticalAlignment="Center"
-                                           Width="200" DockPanel.Dock="Left" Foreground="#E0E0F0"
+                                           Width="200" DockPanel.Dock="Left" Foreground="{DynamicResource TextPrimaryBrush}"
                                            FontFamily="Consolas, 'Courier New'"/>
                                 <TextBox Text="{Binding MaxRetries}" Width="80"
                                          HorizontalAlignment="Left" Padding="8,4"/>
                             </DockPanel>
                             <DockPanel Margin="0,0,0,8">
                                 <TextBlock Text="HTTP timeout (sec):" VerticalAlignment="Center"
-                                           Width="200" DockPanel.Dock="Left" Foreground="#E0E0F0"
+                                           Width="200" DockPanel.Dock="Left" Foreground="{DynamicResource TextPrimaryBrush}"
                                            FontFamily="Consolas, 'Courier New'"/>
                                 <TextBox Text="{Binding TimeoutSeconds}" Width="80"
                                          HorizontalAlignment="Left" Padding="8,4"/>
                             </DockPanel>
                             <DockPanel Margin="0,0,0,8">
                                 <TextBlock Text="Speed limit (KB/s, 0=unlimited):" VerticalAlignment="Center"
-                                           Width="200" DockPanel.Dock="Left" Foreground="#E0E0F0"
+                                           Width="200" DockPanel.Dock="Left" Foreground="{DynamicResource TextPrimaryBrush}"
                                            FontFamily="Consolas, 'Courier New'"/>
                                 <TextBox Text="{Binding SpeedLimitKBps}" Width="80"
                                          HorizontalAlignment="Left" Padding="8,4"/>
                             </DockPanel>
 
-                            <Separator Margin="0,16,0,16" Background="#1E1E2E"/>
+                            <Separator Margin="0,16,0,16" Background="{DynamicResource BorderBrush}"/>
                             <TextBlock Text="PROXY" FontWeight="Bold" Margin="0,0,0,8"
-                                       Foreground="#00F0FF" FontFamily="Consolas, 'Courier New'"/>
+                                       Foreground="{DynamicResource PrimaryBrush}" FontFamily="Consolas, 'Courier New'"/>
                             <CheckBox Content="Enable proxy"
                                       IsChecked="{Binding ProxyEnabled}" Margin="0,0,0,8"/>
 
                             <StackPanel Visibility="{Binding ProxyEnabled, Converter={StaticResource BoolToVis}}">
                                 <DockPanel Margin="0,0,0,8">
                                     <TextBlock Text="Type:" VerticalAlignment="Center"
-                                               Width="80" DockPanel.Dock="Left" Foreground="#E0E0F0"
+                                               Width="80" DockPanel.Dock="Left" Foreground="{DynamicResource TextPrimaryBrush}"
                                                FontFamily="Consolas, 'Courier New'"/>
                                     <ComboBox SelectedValue="{Binding ProxyType}" Width="120"
                                               HorizontalAlignment="Left" Padding="8,4"
@@ -147,26 +147,26 @@
                                 </DockPanel>
                                 <DockPanel Margin="0,0,0,8">
                                     <TextBlock Text="Host:" VerticalAlignment="Center"
-                                               Width="80" DockPanel.Dock="Left" Foreground="#E0E0F0"
+                                               Width="80" DockPanel.Dock="Left" Foreground="{DynamicResource TextPrimaryBrush}"
                                                FontFamily="Consolas, 'Courier New'"/>
                                     <TextBox Text="{Binding ProxyHost}" Padding="8,4"/>
                                 </DockPanel>
                                 <DockPanel Margin="0,0,0,8">
                                     <TextBlock Text="Port:" VerticalAlignment="Center"
-                                               Width="80" DockPanel.Dock="Left" Foreground="#E0E0F0"
+                                               Width="80" DockPanel.Dock="Left" Foreground="{DynamicResource TextPrimaryBrush}"
                                                FontFamily="Consolas, 'Courier New'"/>
                                     <TextBox Text="{Binding ProxyPort}" Width="80"
                                              HorizontalAlignment="Left" Padding="8,4"/>
                                 </DockPanel>
                                 <DockPanel Margin="0,0,0,8">
                                     <TextBlock Text="Username:" VerticalAlignment="Center"
-                                               Width="80" DockPanel.Dock="Left" Foreground="#E0E0F0"
+                                               Width="80" DockPanel.Dock="Left" Foreground="{DynamicResource TextPrimaryBrush}"
                                                FontFamily="Consolas, 'Courier New'"/>
                                     <TextBox Text="{Binding ProxyUsername}" Padding="8,4"/>
                                 </DockPanel>
                                 <DockPanel Margin="0,0,0,8">
                                     <TextBlock Text="Password:" VerticalAlignment="Center"
-                                               Width="80" DockPanel.Dock="Left" Foreground="#E0E0F0"
+                                               Width="80" DockPanel.Dock="Left" Foreground="{DynamicResource TextPrimaryBrush}"
                                                FontFamily="Consolas, 'Courier New'"/>
                                     <TextBox Text="{Binding ProxyPassword}" Padding="8,4"/>
                                 </DockPanel>
@@ -181,9 +181,9 @@
                         <StackPanel>
                             <!-- Version Selector -->
                             <TextBlock Text="FFMPEG_VERSION" FontWeight="Bold" Margin="0,0,0,4"
-                                       Foreground="#00F0FF" FontFamily="Consolas, 'Courier New'"/>
+                                       Foreground="{DynamicResource PrimaryBrush}" FontFamily="Consolas, 'Courier New'"/>
                             <TextBlock Text="Choose which FFmpeg build to download. Older versions support more GPU drivers."
-                                       TextWrapping="Wrap" Foreground="#707088" FontSize="11" Margin="0,0,0,8"
+                                       TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" Margin="0,0,0,8"
                                        FontFamily="Consolas, 'Courier New'"/>
                             <ComboBox SelectedValue="{Binding FfmpegSelectedVersion}" Width="320"
                                       HorizontalAlignment="Left" Padding="8,4"
@@ -193,56 +193,56 @@
                                 <ComboBoxItem Content="Latest Master (Bleeding Edge)" Tag="latest_master"/>
                             </ComboBox>
                             <TextBlock Text="{Binding FfmpegVersionDescription}"
-                                       TextWrapping="Wrap" Foreground="#B0B0C0" FontSize="11" Margin="0,4,0,8"
+                                       TextWrapping="Wrap" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="11" Margin="0,4,0,8"
                                        FontFamily="Consolas, 'Courier New'"/>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                 <Button Content="DOWNLOAD" Command="{Binding DownloadFFmpegCommand}"
                                         Padding="16,6" Margin="0,0,8,0"
-                                        Background="#1000F0FF" Foreground="#00F0FF" BorderBrush="#00F0FF"
+                                        Background="{DynamicResource PrimaryButtonBg}" Foreground="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}"
                                         BorderThickness="1" FontSize="13"
                                         Visibility="{Binding IsDownloadingFFmpeg, Converter={StaticResource BoolToVis}, ConverterParameter=inverse}"/>
                                 <Button Content="BROWSE_LOCAL" Command="{Binding BrowseFFmpegCommand}"
                                         Padding="16,6"
-                                        Background="#10707088" Foreground="#707088" BorderBrush="#707088"
+                                        Background="{DynamicResource SecondaryButtonBg}" Foreground="{DynamicResource TextSecondaryBrush}" BorderBrush="{DynamicResource TextSecondaryBrush}"
                                         BorderThickness="1" FontSize="13"/>
                             </StackPanel>
                             <StackPanel Visibility="{Binding IsDownloadingFFmpeg, Converter={StaticResource BoolToVis}}">
-                                <TextBlock Text="{Binding FfmpegDownloadStatusText}" Foreground="#FFD000" Margin="0,0,0,4"
+                                <TextBlock Text="{Binding FfmpegDownloadStatusText}" Foreground="{DynamicResource WarningBrush}" Margin="0,0,0,4"
                                            FontFamily="Consolas, 'Courier New'"/>
                                 <ProgressBar Value="{Binding FfmpegDownloadProgress}" Height="8"
-                                             Background="#1A1A2E" Foreground="#FFD000"/>
+                                             Background="{DynamicResource HoverBrush}" Foreground="{DynamicResource WarningBrush}"/>
                             </StackPanel>
 
-                            <Separator Margin="0,12,0,12" Background="#1E1E2E"/>
+                            <Separator Margin="0,12,0,12" Background="{DynamicResource BorderBrush}"/>
 
                             <!-- Installed Version Info -->
                             <TextBlock Text="INSTALLED_FFMPEG" FontWeight="Bold" Margin="0,0,0,4"
-                                       Foreground="#00F0FF" FontFamily="Consolas, 'Courier New'"/>
+                                       Foreground="{DynamicResource PrimaryBrush}" FontFamily="Consolas, 'Courier New'"/>
                             <DockPanel>
                                 <TextBox Text="{Binding FfmpegPath, UpdateSourceTrigger=PropertyChanged}"
                                          VerticalContentAlignment="Center" Padding="8,4"
-                                         Foreground="#707088"/>
+                                         Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </DockPanel>
 
                             <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                                <TextBlock Text="Status: " FontWeight="Bold" Foreground="#E0E0F0"
+                                <TextBlock Text="Status: " FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"
                                            FontFamily="Consolas, 'Courier New'"/>
                                 <TextBlock Text="{Binding IsFFmpegInstalled, StringFormat='{}{0}'}"
                                            Foreground="{Binding IsFFmpegInstalled, Converter={StaticResource BoolToVis}}"
                                            FontFamily="Consolas, 'Courier New'"/>
                             </StackPanel>
                             <TextBlock Text="{Binding FfmpegVersion, StringFormat='Version: {0}'}"
-                                       FontSize="12" Foreground="#707085" Margin="0,4,0,0"
+                                       FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0"
                                        Visibility="{Binding IsFFmpegInstalled, Converter={StaticResource BoolToVis}}"
                                        FontFamily="Consolas, 'Courier New'"/>
 
-                            <Separator Margin="0,16,0,16" Background="#1E1E2E"/>
+                            <Separator Margin="0,16,0,16" Background="{DynamicResource BorderBrush}"/>
 
                             <TextBlock Text="ENCODING_SETTINGS" FontWeight="Bold" Margin="0,0,0,8"
-                                       Foreground="#00F0FF" FontFamily="Consolas, 'Courier New'"/>
+                                       Foreground="{DynamicResource PrimaryBrush}" FontFamily="Consolas, 'Courier New'"/>
                             <DockPanel Margin="0,0,0,8">
                                 <TextBlock Text="Preset:" VerticalAlignment="Center"
-                                           Width="120" DockPanel.Dock="Left" Foreground="#E0E0F0"
+                                           Width="120" DockPanel.Dock="Left" Foreground="{DynamicResource TextPrimaryBrush}"
                                            FontFamily="Consolas, 'Courier New'"/>
                                 <ComboBox SelectedValue="{Binding FfmpegPreset}" Width="150"
                                           HorizontalAlignment="Left" Padding="8,4"
@@ -261,29 +261,29 @@
                             </DockPanel>
                             <DockPanel Margin="0,0,0,8">
                                 <TextBlock Text="CRF Quality:" VerticalAlignment="Center"
-                                           Width="120" DockPanel.Dock="Left" Foreground="#E0E0F0"
+                                           Width="120" DockPanel.Dock="Left" Foreground="{DynamicResource TextPrimaryBrush}"
                                            FontFamily="Consolas, 'Courier New'"/>
                                 <TextBox Text="{Binding FfmpegCRF}" Width="80"
                                          HorizontalAlignment="Left" Padding="8,4"/>
                                 <TextBlock Text="(0=default, 1-51, lower=better)"
-                                           Foreground="#707088" FontSize="11" Margin="8,0,0,0"
+                                           Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11" Margin="8,0,0,0"
                                            VerticalAlignment="Center"
                                            FontFamily="Consolas, 'Courier New'"/>
                             </DockPanel>
 
-                            <Separator Margin="0,16,0,16" Background="#1E1E2E"/>
+                            <Separator Margin="0,16,0,16" Background="{DynamicResource BorderBrush}"/>
                             <TextBlock Text="GPU_ACCELERATION" FontWeight="Bold" Margin="0,0,0,8"
-                                       Foreground="#00F0FF" FontFamily="Consolas, 'Courier New'"/>
+                                       Foreground="{DynamicResource PrimaryBrush}" FontFamily="Consolas, 'Courier New'"/>
                             <CheckBox Content="Use GPU encoding (if available)"
                                       IsChecked="{Binding FfmpegUseGPU}" Margin="0,0,0,8"/>
-                            <TextBlock Text="Detected Encoder:" FontSize="12" Foreground="#707088"
+                            <TextBlock Text="Detected Encoder:" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
                                        Visibility="{Binding FfmpegUseGPU, Converter={StaticResource BoolToVis}}"
                                        FontFamily="Consolas, 'Courier New'"/>
-                            <TextBlock Text="{Binding FfmpegGPUEncoder}" FontSize="12" Foreground="#00FF6A"
+                            <TextBlock Text="{Binding FfmpegGPUEncoder}" FontSize="12" Foreground="{DynamicResource SuccessBrush}"
                                        Margin="0,4,0,0" FontWeight="Bold"
                                        Visibility="{Binding FfmpegUseGPU, Converter={StaticResource BoolToVis}}"
                                        FontFamily="Consolas, 'Courier New'"/>
-                            <TextBlock Text="Detection Log:" FontSize="12" Foreground="#707088"
+                            <TextBlock Text="Detection Log:" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
                                        Margin="0,12,0,4"
                                        Visibility="{Binding FfmpegUseGPU, Converter={StaticResource BoolToVis}}"
                                        FontFamily="Consolas, 'Courier New'"/>
@@ -302,23 +302,23 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16">
                         <StackPanel>
                             <TextBlock Text="DEFAULT_USER_AGENT" FontWeight="Bold" Margin="0,0,0,4"
-                                       Foreground="#00F0FF" FontFamily="Consolas, 'Courier New'"/>
+                                       Foreground="{DynamicResource PrimaryBrush}" FontFamily="Consolas, 'Courier New'"/>
                             <TextBox Text="{Binding DefaultUserAgent}" TextWrapping="Wrap"
                                      AcceptsReturn="True" Height="60" Padding="8,4"
                                      VerticalScrollBarVisibility="Auto"/>
 
                             <TextBlock Text="DEFAULT_REFERER" FontWeight="Bold" Margin="0,16,0,4"
-                                       Foreground="#00F0FF" FontFamily="Consolas, 'Courier New'"/>
+                                       Foreground="{DynamicResource PrimaryBrush}" FontFamily="Consolas, 'Courier New'"/>
                             <TextBox Text="{Binding DefaultReferer}" Padding="8,4"/>
 
                             <TextBlock Text="DEFAULT_COOKIES" FontWeight="Bold" Margin="0,16,0,4"
-                                       Foreground="#00F0FF" FontFamily="Consolas, 'Courier New'"/>
+                                       Foreground="{DynamicResource PrimaryBrush}" FontFamily="Consolas, 'Courier New'"/>
                             <TextBox Text="{Binding DefaultCookies}" TextWrapping="Wrap"
                                      AcceptsReturn="True" Height="60" Padding="8,4"
                                      VerticalScrollBarVisibility="Auto"/>
 
                             <TextBlock Text="// These headers are used as defaults for all downloads. Override per-task."
-                                       TextWrapping="Wrap" Foreground="#707088" FontSize="11"
+                                       TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="11"
                                        Margin="0,16,0,0"
                                        FontFamily="Consolas, 'Courier New'"/>
                         </StackPanel>
@@ -327,16 +327,16 @@
             </TabControl>
 
             <!-- Buttons -->
-            <Border Grid.Row="2" Background="#141420" Padding="12" BorderBrush="#1E1E2E"
+            <Border Grid.Row="2" Background="{DynamicResource SurfaceBrush}" Padding="12" BorderBrush="{DynamicResource BorderBrush}"
                     BorderThickness="0,1,0,0">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Content="SAVE" Command="{Binding SaveCommand}"
                             Padding="24,8" Margin="0,0,8,0"
-                            Background="#1000F0FF" Foreground="#00F0FF" BorderBrush="#00F0FF"
+                            Background="{DynamicResource PrimaryButtonBg}" Foreground="{DynamicResource PrimaryBrush}" BorderBrush="{DynamicResource PrimaryBrush}"
                             BorderThickness="1" Cursor="Hand" FontSize="13"/>
                     <Button Content="CANCEL" Command="{Binding CancelCommand}"
                             Padding="24,8"
-                            Background="#10707088" Foreground="#707088" BorderBrush="#707088"
+                            Background="{DynamicResource SecondaryButtonBg}" Foreground="{DynamicResource TextSecondaryBrush}" BorderBrush="{DynamicResource TextSecondaryBrush}"
                             BorderThickness="1" Cursor="Hand" FontSize="13"/>
                 </StackPanel>
             </Border>

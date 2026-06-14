@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              MouseLeftButtonDown="OnTitleBarMouseDown">
     <Border Background="{StaticResource TitleBarGradient}" Padding="12,0"
-            BorderBrush="#1E1E2E" BorderThickness="0,0,0,1"
+            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
             CornerRadius="4,4,0,0">
         <DockPanel Height="40">
             <!-- Window buttons -->
@@ -17,16 +17,16 @@
                             <Border x:Name="bg" Background="{TemplateBinding Background}"
                                     Width="{TemplateBinding Width}"
                                     Height="{TemplateBinding Height}">
-                                <Path Data="M 2 8 L 14 8" Stroke="#707088" StrokeThickness="1.2"
+                                <Path Data="M 2 8 L 14 8" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.2"
                                       StrokeStartLineCap="Round" StrokeEndLineCap="Round"
                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="bg" Property="Background" Value="#1A1A2E"/>
+                                    <Setter TargetName="bg" Property="Background" Value="{DynamicResource HoverBrush}"/>
                                     <Setter TargetName="bg" Property="Effect">
                                         <Setter.Value>
-                                            <DropShadowEffect Color="#00F0FF" BlurRadius="8" ShadowDepth="0" Opacity="0.4"/>
+                                            <DropShadowEffect Color="{DynamicResource PrimaryBrush}" BlurRadius="8" ShadowDepth="0" Opacity="0.4"/>
                                         </Setter.Value>
                                     </Setter>
                                 </Trigger>
@@ -45,13 +45,13 @@
                                     Height="{TemplateBinding Height}">
                                 <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <Path x:Name="icon" Data="M 1 1 L 11 11 M 11 1 L 1 11"
-                                          Stroke="#707088" StrokeThickness="1.2"
+                                          Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.2"
                                           StrokeStartLineCap="Round" StrokeEndLineCap="Round"/>
                                 </Grid>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="bg" Property="Background" Value="#FF0040"/>
+                                    <Setter TargetName="bg" Property="Background" Value="{DynamicResource ErrorBrush}"/>
                                     <Setter TargetName="icon" Property="Stroke" Value="White"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
@@ -61,7 +61,7 @@
             </StackPanel>
             <!-- Title -->
             <TextBlock Text="{Binding TitleText, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                       FontSize="13" FontWeight="Bold" Foreground="#00F0FF"
+                       FontSize="13" FontWeight="Bold" Foreground="{DynamicResource PrimaryBrush}"
                        VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
                        FontFamily="Consolas, 'Courier New'"/>
         </DockPanel>

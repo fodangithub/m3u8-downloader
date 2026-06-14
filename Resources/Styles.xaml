@@ -15,6 +15,12 @@
     <Color x:Key="SurfaceColor">#141420</Color>
     <Color x:Key="BorderColor">#1E1E2E</Color>
     <Color x:Key="InputColor">#0D0D1A</Color>
+    <Color x:Key="HoverColor">#1A1A2E</Color>
+    <Color x:Key="BadgeTextColor">#0A0A12</Color>
+    <Color x:Key="WarningBgColor">#1A1400</Color>
+    <Color x:Key="WarningTextColor">#BBA000</Color>
+    <Color x:Key="WarningTextMutedColor">#997700</Color>
+    <Color x:Key="ProgressTrackColor">#1A1A2E</Color>
 
     <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}"/>
     <SolidColorBrush x:Key="PrimaryDarkBrush" Color="{StaticResource PrimaryDarkColor}"/>
@@ -29,19 +35,32 @@
     <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}"/>
     <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}"/>
     <SolidColorBrush x:Key="InputBrush" Color="{StaticResource InputColor}"/>
+    <SolidColorBrush x:Key="HoverBrush" Color="{StaticResource HoverColor}"/>
+    <SolidColorBrush x:Key="BadgeTextBrush" Color="{StaticResource BadgeTextColor}"/>
+    <SolidColorBrush x:Key="WarningBgBrush" Color="{StaticResource WarningBgColor}"/>
+    <SolidColorBrush x:Key="WarningTextBrush" Color="{StaticResource WarningTextColor}"/>
+    <SolidColorBrush x:Key="WarningTextMutedBrush" Color="{StaticResource WarningTextMutedColor}"/>
+    <SolidColorBrush x:Key="ProgressTrackBrush" Color="{StaticResource ProgressTrackColor}"/>
+
+    <!-- Translucent button background brushes (~6% opacity tinted) -->
+    <SolidColorBrush x:Key="PrimaryButtonBg" Color="#1000F0FF"/>
+    <SolidColorBrush x:Key="SuccessButtonBg" Color="#1000FF6A"/>
+    <SolidColorBrush x:Key="SecondaryButtonBg" Color="#10707088"/>
+    <SolidColorBrush x:Key="WarningButtonBg" Color="#10FFD000"/>
+    <SolidColorBrush x:Key="ErrorButtonBg" Color="#10FF0040"/>
 
     <!-- Title bar gradient -->
     <LinearGradientBrush x:Key="TitleBarGradient" StartPoint="0,0" EndPoint="1,0">
-        <GradientStop Color="#0A0A12" Offset="0"/>
-        <GradientStop Color="#141420" Offset="0.5"/>
-        <GradientStop Color="#0A0A12" Offset="1"/>
+        <GradientStop Color="{StaticResource BackgroundColor}" Offset="0"/>
+        <GradientStop Color="{StaticResource SurfaceColor}" Offset="0.5"/>
+        <GradientStop Color="{StaticResource BackgroundColor}" Offset="1"/>
     </LinearGradientBrush>
 
     <!-- Neon glow effect for primary buttons -->
-    <DropShadowEffect x:Key="NeonGlowCyan" Color="#00F0FF" BlurRadius="12" ShadowDepth="0" Opacity="0.5"/>
-    <DropShadowEffect x:Key="NeonGlowPink" Color="#FF0080" BlurRadius="12" ShadowDepth="0" Opacity="0.5"/>
-    <DropShadowEffect x:Key="NeonGlowGreen" Color="#00FF6A" BlurRadius="12" ShadowDepth="0" Opacity="0.5"/>
-    <DropShadowEffect x:Key="NeonGlowYellow" Color="#FFD000" BlurRadius="10" ShadowDepth="0" Opacity="0.4"/>
+    <DropShadowEffect x:Key="NeonGlowCyan" Color="{StaticResource PrimaryColor}" BlurRadius="12" ShadowDepth="0" Opacity="0.5"/>
+    <DropShadowEffect x:Key="NeonGlowPink" Color="{StaticResource AccentColor}" BlurRadius="12" ShadowDepth="0" Opacity="0.5"/>
+    <DropShadowEffect x:Key="NeonGlowGreen" Color="{StaticResource SuccessColor}" BlurRadius="12" ShadowDepth="0" Opacity="0.5"/>
+    <DropShadowEffect x:Key="NeonGlowYellow" Color="{StaticResource WarningColor}" BlurRadius="10" ShadowDepth="0" Opacity="0.4"/>
 
     <!-- Global Font -->
     <Style TargetType="TextBlock">
@@ -57,7 +76,7 @@
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
         <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
-        <Setter Property="Background" Value="#1000F0FF"/>
+        <Setter Property="Background" Value="{DynamicResource PrimaryButtonBg}"/>
         <Setter Property="Padding" Value="16,6"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -76,7 +95,7 @@
                             <Setter TargetName="border" Property="Effect"
                                     Value="{StaticResource NeonGlowCyan}"/>
                             <Setter TargetName="border" Property="BorderBrush"
-                                    Value="#00F0FF"/>
+                                    Value="{DynamicResource PrimaryBrush}"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="border" Property="Opacity" Value="0.8"/>
@@ -140,10 +159,10 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsHighlighted" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="#1A1A2E"/>
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBrush}"/>
                         </Trigger>
                         <Trigger Property="IsSelected" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="#1E1E2E"/>
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BorderBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -184,7 +203,7 @@
                                                     </Grid.ColumnDefinitions>
                                                     <Path x:Name="arrow" Grid.Column="1"
                                                           Data="M 0 0 L 4 4 L 8 0"
-                                                          Stroke="#707088" StrokeThickness="1.5"
+                                                          Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.5"
                                                           Fill="Transparent"
                                                           HorizontalAlignment="Center"
                                                           VerticalAlignment="Center"/>
@@ -192,7 +211,7 @@
                                             </Border>
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="arrow" Property="Stroke" Value="#00F0FF"/>
+                                                    <Setter TargetName="arrow" Property="Stroke" Value="{DynamicResource PrimaryBrush}"/>
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
@@ -214,7 +233,7 @@
                                AllowsTransparency="True"
                                PopupAnimation="Slide"
                                Focusable="False">
-                            <Border Background="#141420" BorderBrush="#1E1E2E"
+                            <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}"
                                     BorderThickness="1" CornerRadius="2"
                                     MinWidth="{TemplateBinding ActualWidth}"
                                     MaxHeight="{TemplateBinding MaxDropDownHeight}">
@@ -245,7 +264,7 @@
 
     <!-- ProgressBar Style -->
     <Style TargetType="ProgressBar">
-        <Setter Property="Background" Value="#1A1A2E"/>
+        <Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
         <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
     </Style>
 
@@ -284,7 +303,7 @@
                                     Value="{StaticResource NeonGlowCyan}"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="border" Property="Background" Value="#1A1A2E"/>
+                            <Setter TargetName="border" Property="Background" Value="{DynamicResource HoverBrush}"/>
                             <Setter TargetName="content" Property="TextBlock.Foreground"
                                     Value="{StaticResource TextPrimaryBrush}"/>
                         </Trigger>
@@ -312,9 +331,9 @@
 
     <!-- ToolTip Style - dark background with light text -->
     <Style TargetType="ToolTip">
-        <Setter Property="Background" Value="#141420"/>
-        <Setter Property="Foreground" Value="#E0E0F0"/>
-        <Setter Property="BorderBrush" Value="#00F0FF"/>
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="8,4"/>
         <Setter Property="FontFamily" Value="Consolas, 'Courier New', 'Microsoft YaHei UI'"/>
@@ -351,7 +370,7 @@
         <Setter Property="Height" Value="32"/>
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Foreground" Value="#707088"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
         <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
         <Setter Property="FontSize" Value="10"/>
         <Setter Property="Cursor" Value="Hand"/>
