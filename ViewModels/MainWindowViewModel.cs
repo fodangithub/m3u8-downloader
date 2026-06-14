@@ -211,16 +211,25 @@ public partial class MainWindowViewModel : ObservableObject
 
     private async Task AddTaskAsync()
     {
-        var dialog = new Views.AddTaskDialog
+        try
         {
-            DataContext = new AddTaskDialogViewModel(
-                _taskManager, _settingsService,
-                Microsoft.Extensions.Logging.Abstractions.NullLogger<AddTaskDialogViewModel>.Instance)
-        };
+            var dialog = new Views.AddTaskDialog
+            {
+                DataContext = new AddTaskDialogViewModel(
+                    _taskManager, _settingsService,
+                    Microsoft.Extensions.Logging.Abstractions.NullLogger<AddTaskDialogViewModel>.Instance)
+            };
 
-        if (dialog.ShowDialog() == true)
+            if (dialog.ShowDialog() == true)
+            {
+                _logger.LogInformation("New task added via dialog");
+            }
+        }
+        catch (Exception ex)
         {
-            _logger.LogInformation("New task added via dialog");
+            _logger.LogError(ex, "Failed to open AddTaskDialog");
+            System.Windows.MessageBox.Show($"Failed to open dialog:\n{ex.Message}\n\n{ex.InnerException?.Message}",
+                "Error", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
         }
     }
 

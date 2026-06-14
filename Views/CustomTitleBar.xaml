@@ -26,7 +26,7 @@
                                     <Setter TargetName="bg" Property="Background" Value="{DynamicResource HoverBrush}"/>
                                     <Setter TargetName="bg" Property="Effect">
                                         <Setter.Value>
-                                            <DropShadowEffect Color="{DynamicResource PrimaryBrush}" BlurRadius="8" ShadowDepth="0" Opacity="0.4"/>
+                                            <DropShadowEffect Color="{StaticResource PrimaryColor}" BlurRadius="8" ShadowDepth="0" Opacity="0.4"/>
                                         </Setter.Value>
                                     </Setter>
                                 </Trigger>

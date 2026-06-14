@@ -23,6 +23,24 @@ public partial class App : Application
 
         base.OnStartup(e);
 
+        // Catch unhandled exceptions so they get logged instead of silent crash
+        DispatcherUnhandledException += (_, args) =>
+        {
+            Log.Fatal(args.Exception, "Unhandled dispatcher exception");
+            Log.CloseAndFlush();
+        };
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+        {
+            if (args.ExceptionObject is Exception ex)
+                Log.Fatal(ex, "Unhandled domain exception");
+            Log.CloseAndFlush();
+        };
+        TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            Log.Fatal(args.Exception, "Unobserved task exception");
+            args.SetObserved();
+        };
+
         var services = new ServiceCollection();
         ConfigureServices(services);
         Services = services.BuildServiceProvider();
