@@ -68,13 +68,24 @@ public class DownloadEngine
         _logger.LogInformation("Starting download of {Count} segments with concurrency {Concurrency}",
             task.Segments.Count(s => s.Status != SegmentStatus.Completed), maxConcurrent);
 
+        int pendingCount;
+        lock (_queueLock) { pendingCount = _queued.Count; }
+
+        if (pendingCount == 0)
+        {
+            _logger.LogInformation("All segments already completed for task {TaskId}", task.Id);
+            return;
+        }
+
+        using var workerCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+
         try
         {
             var workers = new Task[maxConcurrent];
             for (int i = 0; i < maxConcurrent; i++)
             {
                 workers[i] = Task.Run(() => WorkerLoopAsync(
-                    task, segmentSemaphore, speedTracker, progress, ct), ct);
+                    task, segmentSemaphore, speedTracker, progress, workerCts), ct);
             }
 
             await Task.WhenAll(workers);
@@ -86,8 +97,12 @@ public class DownloadEngine
         }
         catch (OperationCanceledException)
         {
-            _logger.LogInformation("Download task cancelled: {TaskId}", task.Id);
-            throw;
+            if (ct.IsCancellationRequested)
+            {
+                _logger.LogInformation("Download task cancelled: {TaskId}", task.Id);
+                throw;
+            }
+            _logger.LogInformation("Workers signalled completion for task {TaskId}", task.Id);
         }
         catch (Exception ex)
         {
@@ -124,13 +139,15 @@ public class DownloadEngine
         SemaphoreSlim segmentSemaphore,
         SpeedTracker speedTracker,
         IProgress<DownloadTask> progress,
-        CancellationToken ct)
+        CancellationTokenSource workerCts)
     {
-        while (!ct.IsCancellationRequested)
+        var workerToken = workerCts.Token;
+
+        while (!workerToken.IsCancellationRequested)
         {
             try
             {
-                await _workAvailable!.WaitAsync(ct);
+                await _workAvailable!.WaitAsync(workerToken);
             }
             catch (OperationCanceledException)
             {
@@ -145,14 +162,20 @@ public class DownloadEngine
                 _queued.Remove(segment);
             }
 
-            await segmentSemaphore.WaitAsync(ct);
+            await segmentSemaphore.WaitAsync(workerToken);
             try
             {
-                await ProcessSegmentAsync(task, segment, speedTracker, progress, ct);
+                await ProcessSegmentAsync(task, segment, speedTracker, progress, workerToken);
             }
             finally
             {
                 segmentSemaphore.Release();
+            }
+
+            if (task.Segments.All(s => s.Status is SegmentStatus.Completed or SegmentStatus.Failed))
+            {
+                _logger.LogInformation("All segments reached terminal state, signalling workers to exit");
+                workerCts.Cancel();
             }
         }
     }
