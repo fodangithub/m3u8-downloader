@@ -1,5 +1,7 @@
 # M3U8 Downloader / M3U8 下载器
 
+![AppScreenShot](https://github.com/fodangithub/m3u8-downloader/blob/master/Images/window-main.png)
+
 A lightweight Windows desktop application for downloading M3U8 (HLS) video streams and converting them to MP4.
 
 一款轻量级 Windows 桌面应用，用于下载 M3U8（HLS）视频流并转换为 MP4 格式。
