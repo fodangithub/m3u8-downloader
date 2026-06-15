@@ -13,6 +13,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly SettingsService _settingsService;
     private readonly FFmpegService _ffmpegService;
     private readonly FFmpegDownloader _ffmpegDownloader;
+    private readonly TaskManager _taskManager;
     private readonly ILogger<SettingsViewModel> _logger;
 
     // General
@@ -76,11 +77,13 @@ public partial class SettingsViewModel : ObservableObject
         SettingsService settingsService,
         FFmpegService ffmpegService,
         FFmpegDownloader ffmpegDownloader,
+        TaskManager taskManager,
         ILogger<SettingsViewModel> logger)
     {
         _settingsService = settingsService;
         _ffmpegService = ffmpegService;
         _ffmpegDownloader = ffmpegDownloader;
+        _taskManager = taskManager;
         _logger = logger;
 
         BrowseSaveDirCommand = new RelayCommand(BrowseSaveDir);
@@ -173,6 +176,10 @@ public partial class SettingsViewModel : ObservableObject
         s.DefaultCookies = DefaultCookies;
 
         _settingsService.Save();
+
+        _taskManager.UpdateMaxConcurrentTasks(s.MaxConcurrentTasks);
+        _taskManager.UpdateMaxConcurrentMerges(s.MaxConcurrentMerges);
+
         DialogResult = true;
         CloseAction?.Invoke();
     }

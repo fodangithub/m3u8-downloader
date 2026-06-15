@@ -5,8 +5,6 @@ VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M3U8Downloader", "M3U8Downloader.csproj", "{3C103EA2-A011-7132-C87D-7F402B82BF76}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestRunner", "TestRunner\TestRunner.csproj", "{DCAA0107-1C08-4D48-8EFB-C69A389F22CE}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,18 +27,6 @@ Global
 		{3C103EA2-A011-7132-C87D-7F402B82BF76}.Release|x64.Build.0 = Release|Any CPU
 		{3C103EA2-A011-7132-C87D-7F402B82BF76}.Release|x86.ActiveCfg = Release|Any CPU
 		{3C103EA2-A011-7132-C87D-7F402B82BF76}.Release|x86.Build.0 = Release|Any CPU
-		{DCAA0107-1C08-4D48-8EFB-C69A389F22CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DCAA0107-1C08-4D48-8EFB-C69A389F22CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DCAA0107-1C08-4D48-8EFB-C69A389F22CE}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{DCAA0107-1C08-4D48-8EFB-C69A389F22CE}.Debug|x64.Build.0 = Debug|Any CPU
-		{DCAA0107-1C08-4D48-8EFB-C69A389F22CE}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{DCAA0107-1C08-4D48-8EFB-C69A389F22CE}.Debug|x86.Build.0 = Debug|Any CPU
-		{DCAA0107-1C08-4D48-8EFB-C69A389F22CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DCAA0107-1C08-4D48-8EFB-C69A389F22CE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DCAA0107-1C08-4D48-8EFB-C69A389F22CE}.Release|x64.ActiveCfg = Release|Any CPU
-		{DCAA0107-1C08-4D48-8EFB-C69A389F22CE}.Release|x64.Build.0 = Release|Any CPU
-		{DCAA0107-1C08-4D48-8EFB-C69A389F22CE}.Release|x86.ActiveCfg = Release|Any CPU
-		{DCAA0107-1C08-4D48-8EFB-C69A389F22CE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

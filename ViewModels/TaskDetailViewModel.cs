@@ -125,10 +125,7 @@ public partial class TaskDetailViewModel : ObservableObject
             segment.ErrorMessage = "";
         }
 
-        if (_task.Status is TaskStatus.Paused or TaskStatus.Failed)
-            await _taskManager.ResumeTaskAsync(_task);
-        else
-            await _taskManager.StartTaskAsync(_task);
+        await _taskManager.ResumeTaskAsync(_task);
     }
 
     private async Task RetryAllFailedAsync()
@@ -142,10 +139,7 @@ public partial class TaskDetailViewModel : ObservableObject
         _task.MergeProgress = 0;
         _task.ErrorMessage = "";
 
-        if (_task.Status is TaskStatus.Paused or TaskStatus.Failed)
-            await _taskManager.ResumeTaskAsync(_task);
-        else
-            await _taskManager.StartTaskAsync(_task);
+        await _taskManager.ResumeTaskAsync(_task);
     }
 
     private void RetrySegment(object? parameter)
@@ -156,18 +150,14 @@ public partial class TaskDetailViewModel : ObservableObject
         catch { return; }
 
         var segment = _task.Segments.FirstOrDefault(s => s.Index == segmentIndex);
-        if (segment == null) return;
+        if (segment == null || segment.Status is not SegmentStatus.Failed) return;
 
         segment.Status = SegmentStatus.Pending;
         segment.RetryCount = 0;
         segment.ErrorMessage = "";
         _task.ErrorMessage = "";
 
-        if (_task.Status is TaskStatus.Failed or TaskStatus.Paused
-            or TaskStatus.Completed or TaskStatus.Cancelled)
-            _ = _taskManager.ResumeTaskAsync(_task);
-        // If Downloading: the engine will pick up the Pending segment on next pass
-        // If Merging: let merge finish, user can retry after
+        _ = _taskManager.ResumeTaskAsync(_task);
     }
 
     private async Task UpdateLoopAsync()

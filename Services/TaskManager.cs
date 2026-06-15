@@ -14,8 +14,8 @@ public class TaskManager
     private readonly DownloadEngine _downloadEngine;
     private readonly MergeService _mergeService;
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly SemaphoreSlim _downloadSemaphore;
-    private readonly SemaphoreSlim _mergeSemaphore;
+    private readonly ConcurrencyThrottler _downloadThrottle;
+    private readonly ConcurrencyThrottler _mergeThrottle;
     private readonly Dictionary<string, CancellationTokenSource> _taskCancellations = new();
     private readonly object _lock = new();
 
@@ -35,8 +35,8 @@ public class TaskManager
         _downloadEngine = downloadEngine;
         _mergeService = mergeService;
         _httpClientFactory = httpClientFactory;
-        _downloadSemaphore = new SemaphoreSlim(settingsService.Settings.MaxConcurrentTasks);
-        _mergeSemaphore = new SemaphoreSlim(settingsService.Settings.MaxConcurrentMerges);
+        _downloadThrottle = new ConcurrencyThrottler(settingsService.Settings.MaxConcurrentTasks);
+        _mergeThrottle = new ConcurrencyThrottler(settingsService.Settings.MaxConcurrentMerges);
     }
 
     public async Task<DownloadTask> AddTaskAsync(
@@ -69,7 +69,7 @@ public class TaskManager
         if (task.Status is TaskStatus.Downloading or TaskStatus.Merging)
             return;
 
-        await _downloadSemaphore.WaitAsync();
+        await _downloadThrottle.AcquireAsync();
         try
         {
             var cts = new CancellationTokenSource();
@@ -82,15 +82,14 @@ public class TaskManager
         }
         catch
         {
-            _downloadSemaphore.Release();
+            _downloadThrottle.Release();
             throw;
         }
     }
 
     private async Task RunTaskAsync(DownloadTask task, CancellationToken ct)
     {
-        bool downloadSlotHeld = true;
-        bool mergeSlotHeld = false;
+        var slots = new SlotTracker { DownloadHeld = true };
 
         try
         {
@@ -146,14 +145,13 @@ public class TaskManager
                 task.TotalSegments, task.Id);
 
             // Phase 2+3: Download segments and merge (shared with resume path)
-            await ContinueDownloadAndMergeAsync(task, ct);
+            await ContinueDownloadAndMergeAsync(task, ct, slots);
 
             _logger.LogInformation("Task completed: {TaskId} - {FileName}",
                 task.Id, task.FileName);
         }
         catch (OperationCanceledException)
         {
-            // Preserve Paused status if PauseTask already set it
             if (task.Status != TaskStatus.Paused)
             {
                 task.Status = TaskStatus.Cancelled;
@@ -170,10 +168,7 @@ public class TaskManager
         }
         finally
         {
-            if (downloadSlotHeld)
-                _downloadSemaphore.Release();
-            if (mergeSlotHeld)
-                _mergeSemaphore.Release();
+            ReleaseSlots(slots);
             lock (_lock)
             {
                 _taskCancellations.Remove(task.Id);
@@ -183,13 +178,11 @@ public class TaskManager
 
     /// <summary>
     /// Shared download and merge phase, used by both fresh start and resume paths.
-    /// Assumes the download semaphore slot is already held.
+    /// Assumes the download throttle slot is already held by the caller.
+    /// Updates the shared SlotTracker so the caller's finally block stays in sync.
     /// </summary>
-    private async Task ContinueDownloadAndMergeAsync(DownloadTask task, CancellationToken ct)
+    private async Task ContinueDownloadAndMergeAsync(DownloadTask task, CancellationToken ct, SlotTracker slots)
     {
-        bool downloadSlotHeld = true;
-        bool mergeSlotHeld = false;
-
         try
         {
             // Phase 2: Download segments
@@ -264,12 +257,12 @@ public class TaskManager
             _logger.LogInformation("All segments downloaded and verified for task {TaskId}, proceeding to merge", task.Id);
 
             // Release download slot so other tasks can start downloading while this one merges
-            _downloadSemaphore.Release();
-            downloadSlotHeld = false;
+            _downloadThrottle.Release();
+            slots.DownloadHeld = false;
 
             // Acquire merge slot
-            await _mergeSemaphore.WaitAsync(ct);
-            mergeSlotHeld = true;
+            await _mergeThrottle.AcquireAsync(ct);
+            slots.MergeHeld = true;
 
             // Phase 3: Merge and transcode
             task.Status = TaskStatus.Merging;
@@ -281,29 +274,35 @@ public class TaskManager
         }
         finally
         {
-            if (downloadSlotHeld)
-                _downloadSemaphore.Release();
-            if (mergeSlotHeld)
-                _mergeSemaphore.Release();
+            ReleaseSlots(slots);
         }
     }
 
     /// <summary>
-    /// Resume a paused task. Skips M3U8 re-parsing and continues downloading
-    /// from where it left off, preserving already-completed segments.
+    /// Resume a paused/failed task, or enqueue pending segments for retry
+    /// when the task is already downloading.
     /// </summary>
     public async Task ResumeTaskAsync(DownloadTask task)
     {
+        if (task.Status == TaskStatus.Downloading)
+        {
+            // Task is already running — just enqueue any pending segments for retry
+            var pending = task.Segments
+                .Where(s => s.Status == SegmentStatus.Pending)
+                .ToList();
+            if (pending.Count > 0)
+                _downloadEngine.EnqueueRetrySegments(pending);
+            return;
+        }
+
         if (task.Status is not (TaskStatus.Paused or TaskStatus.Failed
             or TaskStatus.Completed or TaskStatus.Cancelled))
             return;
 
-        // Immediately set to Downloading to prevent double-click race
         task.Status = TaskStatus.Downloading;
         task.StatusText = "Resuming...";
         task.ErrorMessage = "";
 
-        // Reset in-flight/failed segments back to Pending
         foreach (var seg in task.Segments)
         {
             if (seg.Status is SegmentStatus.Failed or SegmentStatus.Retrying or SegmentStatus.Pending)
@@ -314,7 +313,7 @@ public class TaskManager
             }
         }
 
-        await _downloadSemaphore.WaitAsync();
+        await _downloadThrottle.AcquireAsync();
         try
         {
             var cts = new CancellationTokenSource();
@@ -325,9 +324,10 @@ public class TaskManager
 
             _ = Task.Run(async () =>
             {
+                var slots = new SlotTracker { DownloadHeld = true };
                 try
                 {
-                    await ContinueDownloadAndMergeAsync(task, cts.Token);
+                    await ContinueDownloadAndMergeAsync(task, cts.Token, slots);
                     _logger.LogInformation("Task resumed and completed: {TaskId}", task.Id);
                 }
                 catch (OperationCanceledException)
@@ -348,7 +348,7 @@ public class TaskManager
                 }
                 finally
                 {
-                    _downloadSemaphore.Release();
+                    ReleaseSlots(slots);
                     lock (_lock)
                     {
                         _taskCancellations.Remove(task.Id);
@@ -358,7 +358,7 @@ public class TaskManager
         }
         catch
         {
-            _downloadSemaphore.Release();
+            _downloadThrottle.Release();
             throw;
         }
     }
@@ -368,7 +368,6 @@ public class TaskManager
         if (task.Status != TaskStatus.Downloading)
             return;
 
-        // Reset in-flight segments back to Pending so they re-download on resume
         foreach (var seg in task.Segments)
         {
             if (seg.Status is SegmentStatus.Downloading or SegmentStatus.Retrying)
@@ -442,11 +441,37 @@ public class TaskManager
 
     public void UpdateMaxConcurrentTasks(int maxTasks)
     {
-        _logger.LogInformation("Max concurrent download tasks updated to: {Max}", maxTasks);
+        maxTasks = Math.Max(1, maxTasks);
+        _downloadThrottle.SetMax(maxTasks);
+        _logger.LogInformation("Max concurrent download tasks updated to: {Max} (active: {Active})",
+            maxTasks, _downloadThrottle.Active);
     }
 
     public void UpdateMaxConcurrentMerges(int maxMerges)
     {
-        _logger.LogInformation("Max concurrent merge tasks updated to: {Max}", maxMerges);
+        maxMerges = Math.Max(1, maxMerges);
+        _mergeThrottle.SetMax(maxMerges);
+        _logger.LogInformation("Max concurrent merge tasks updated to: {Max} (active: {Active})",
+            maxMerges, _mergeThrottle.Active);
+    }
+
+    private void ReleaseSlots(SlotTracker slots)
+    {
+        if (slots.DownloadHeld)
+        {
+            _downloadThrottle.Release();
+            slots.DownloadHeld = false;
+        }
+        if (slots.MergeHeld)
+        {
+            _mergeThrottle.Release();
+            slots.MergeHeld = false;
+        }
+    }
+
+    private class SlotTracker
+    {
+        public bool DownloadHeld;
+        public bool MergeHeld;
     }
 }

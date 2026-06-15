@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net.Http;
 using M3U8Downloader.Models;
@@ -11,6 +12,11 @@ public class DownloadEngine
     private readonly SettingsService _settingsService;
     private readonly AesDecryptionService _decryptionService;
     private readonly IHttpClientFactory _httpClientFactory;
+
+    private ConcurrentStack<DownloadSegment>? _segmentStack;
+    private readonly HashSet<DownloadSegment> _queued = new();
+    private readonly object _queueLock = new();
+    private SemaphoreSlim? _workAvailable;
 
     public DownloadEngine(
         ILogger<DownloadEngine> logger,
@@ -30,50 +36,48 @@ public class DownloadEngine
         CancellationToken ct)
     {
         var settings = _settingsService.Settings;
-        var semaphore = new SemaphoreSlim(settings.MaxConcurrentSegments);
-        var segmentTasks = new List<Task>();
+        var maxConcurrent = Math.Max(1, settings.MaxConcurrentSegments);
+        var segmentSemaphore = new SemaphoreSlim(maxConcurrent);
         var speedTracker = new SpeedTracker();
 
-        // Create temp directory
         Directory.CreateDirectory(task.TempDirectory);
         _logger.LogInformation("Temp directory created: {TempDir}", task.TempDirectory);
 
         task.Status = TaskStatus.Downloading;
         progress.Report(task);
 
+        // Initialize stack — push in reverse so segment 0 is on top (processed first)
+        lock (_queueLock)
+        {
+            _segmentStack = new ConcurrentStack<DownloadSegment>();
+            _queued.Clear();
+            _workAvailable = new SemaphoreSlim(0);
+
+            for (int i = task.Segments.Count - 1; i >= 0; i--)
+            {
+                var seg = task.Segments[i];
+                if (seg.Status != SegmentStatus.Completed)
+                {
+                    _segmentStack.Push(seg);
+                    _queued.Add(seg);
+                    _workAvailable.Release();
+                }
+            }
+        }
+
         _logger.LogInformation("Starting download of {Count} segments with concurrency {Concurrency}",
-            task.Segments.Count, settings.MaxConcurrentSegments);
+            task.Segments.Count(s => s.Status != SegmentStatus.Completed), maxConcurrent);
 
         try
         {
-            foreach (var segment in task.Segments)
+            var workers = new Task[maxConcurrent];
+            for (int i = 0; i < maxConcurrent; i++)
             {
-                ct.ThrowIfCancellationRequested();
-
-                if (segment.Status == SegmentStatus.Completed)
-                    continue;
-
-                await semaphore.WaitAsync(ct);
-
-                _logger.LogDebug("Starting download for segment #{Index}: {Url}",
-                    segment.Index, segment.Url.Length > 100 ? segment.Url[..100] + "..." : segment.Url);
-
-                var segmentTask = Task.Run(async () =>
-                {
-                    try
-                    {
-                        await DownloadSegmentAsync(task, segment, speedTracker, progress, ct);
-                    }
-                    finally
-                    {
-                        semaphore.Release();
-                    }
-                }, ct);
-
-                segmentTasks.Add(segmentTask);
+                workers[i] = Task.Run(() => WorkerLoopAsync(
+                    task, segmentSemaphore, speedTracker, progress, ct), ct);
             }
 
-            await Task.WhenAll(segmentTasks);
+            await Task.WhenAll(workers);
 
             var completed = task.Segments.Count(s => s.Status == SegmentStatus.Completed);
             var failed = task.Segments.Count(s => s.Status != SegmentStatus.Completed);
@@ -93,7 +97,67 @@ public class DownloadEngine
         }
     }
 
-    private async Task DownloadSegmentAsync(
+    /// <summary>
+    /// Push segments onto the stack for retry while a download is in progress.
+    /// Workers will pick them up with priority (LIFO) as soon as slots are available.
+    /// </summary>
+    public void EnqueueRetrySegments(IEnumerable<DownloadSegment> segments)
+    {
+        lock (_queueLock)
+        {
+            if (_segmentStack == null || _workAvailable == null)
+                return;
+
+            foreach (var seg in segments)
+            {
+                if (_queued.Add(seg))
+                {
+                    _segmentStack.Push(seg);
+                    _workAvailable.Release();
+                }
+            }
+        }
+    }
+
+    private async Task WorkerLoopAsync(
+        DownloadTask task,
+        SemaphoreSlim segmentSemaphore,
+        SpeedTracker speedTracker,
+        IProgress<DownloadTask> progress,
+        CancellationToken ct)
+    {
+        while (!ct.IsCancellationRequested)
+        {
+            try
+            {
+                await _workAvailable!.WaitAsync(ct);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            DownloadSegment? segment;
+            lock (_queueLock)
+            {
+                if (!_segmentStack!.TryPop(out segment))
+                    continue;
+                _queued.Remove(segment);
+            }
+
+            await segmentSemaphore.WaitAsync(ct);
+            try
+            {
+                await ProcessSegmentAsync(task, segment, speedTracker, progress, ct);
+            }
+            finally
+            {
+                segmentSemaphore.Release();
+            }
+        }
+    }
+
+    private async Task ProcessSegmentAsync(
         DownloadTask task,
         DownloadSegment segment,
         SpeedTracker speedTracker,
@@ -105,17 +169,18 @@ public class DownloadEngine
         var filePath = Path.Combine(task.TempDirectory, segment.FileName);
         var maxRetries = settings.MaxRetries; // 0 = infinite
 
-        while (true)
-        {
-            ct.ThrowIfCancellationRequested();
+        segment.Status = SegmentStatus.Downloading;
+        segment.BytesDownloaded = 0;
+        UpdateTaskProgress(task);
+        progress.Report(task);
 
+        _logger.LogDebug("Starting download for segment #{Index}: {Url}",
+            segment.Index, segment.Url.Length > 100 ? segment.Url[..100] + "..." : segment.Url);
+
+        while (!ct.IsCancellationRequested)
+        {
             try
             {
-                segment.Status = SegmentStatus.Downloading;
-                segment.BytesDownloaded = 0;
-                UpdateTaskProgress(task);
-                progress.Report(task);
-
                 using var response = await httpClient.GetAsync(
                     segment.Url,
                     HttpCompletionOption.ResponseHeadersRead,
@@ -141,7 +206,6 @@ public class DownloadEngine
                     segment.BytesDownloaded = segmentBytes;
                     speedTracker.AddBytes(bytesRead);
 
-                    // Update task speed and progress
                     task.DownloadSpeed = speedTracker.GetSpeed();
                     task.TotalBytesDownloaded = task.Segments.Sum(s => s.BytesDownloaded);
                     progress.Report(task);
@@ -167,7 +231,7 @@ public class DownloadEngine
 
                 UpdateTaskProgress(task);
                 progress.Report(task);
-                return; // Success - exit retry loop
+                return;
             }
             catch (OperationCanceledException)
             {
@@ -184,7 +248,8 @@ public class DownloadEngine
                     "Segment {Index} download failed (attempt {Attempt}), retrying in {Interval}s",
                     segment.Index, segment.RetryCount, settings.RetryIntervalSeconds);
 
-                task.FailedSegments = task.Segments.Count(s => s.Status == SegmentStatus.Failed || s.Status == SegmentStatus.Retrying);
+                task.FailedSegments = task.Segments.Count(s =>
+                    s.Status == SegmentStatus.Failed || s.Status == SegmentStatus.Retrying);
                 progress.Report(task);
 
                 if (maxRetries > 0 && segment.RetryCount >= maxRetries)
@@ -192,11 +257,32 @@ public class DownloadEngine
                     segment.Status = SegmentStatus.Failed;
                     _logger.LogError("Segment {Index} failed after {Attempts} attempts",
                         segment.Index, segment.RetryCount);
+                    UpdateTaskProgress(task);
+                    progress.Report(task);
                     return;
                 }
 
-                // Wait before retry
-                await Task.Delay(TimeSpan.FromSeconds(settings.RetryIntervalSeconds), ct);
+                // Wait before retry, then re-enqueue for worker pickup
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(settings.RetryIntervalSeconds), ct);
+                }
+                catch (OperationCanceledException)
+                {
+                    segment.Status = SegmentStatus.Failed;
+                    throw;
+                }
+
+                // Re-enqueue so any worker (including this one) can pick it up
+                lock (_queueLock)
+                {
+                    if (_segmentStack != null && _queued.Add(segment))
+                    {
+                        _segmentStack.Push(segment);
+                        _workAvailable?.Release();
+                    }
+                }
+                return;
             }
         }
     }
@@ -215,16 +301,13 @@ internal class SpeedTracker
 {
     private readonly Queue<(long bytes, DateTime time)> _samples = new();
     private readonly object _lock = new();
-    private long _totalBytes;
 
     public void AddBytes(long bytes)
     {
         lock (_lock)
         {
             _samples.Enqueue((bytes, DateTime.UtcNow));
-            _totalBytes += bytes;
 
-            // Keep only last 3 seconds of samples
             var cutoff = DateTime.UtcNow.AddSeconds(-3);
             while (_samples.Count > 0 && _samples.Peek().time < cutoff)
                 _samples.Dequeue();

@@ -117,7 +117,6 @@ public partial class MainWindowViewModel : ObservableObject
         {
             if (task == null) return;
 
-            // Reset failed segments to Pending for retry
             foreach (var seg in task.Segments.Where(s => s.Status == SegmentStatus.Failed))
             {
                 seg.Status = SegmentStatus.Pending;
@@ -128,11 +127,7 @@ public partial class MainWindowViewModel : ObservableObject
             task.MergeProgress = 0;
             task.ErrorMessage = "";
 
-            // Use resume path for Paused or Failed tasks to preserve completed segments
-            if (task.Status is TaskStatus.Paused or TaskStatus.Failed)
-                await _taskManager.ResumeTaskAsync(task);
-            else
-                await _taskManager.StartTaskAsync(task);
+            await _taskManager.ResumeTaskAsync(task);
         });
 
         CheckFFmpegStatus();
@@ -236,7 +231,7 @@ public partial class MainWindowViewModel : ObservableObject
     private void OpenSettings()
     {
         var vm = new SettingsViewModel(
-            _settingsService, _ffmpegService, _ffmpegDownloader,
+            _settingsService, _ffmpegService, _ffmpegDownloader, _taskManager,
             Microsoft.Extensions.Logging.Abstractions.NullLogger<SettingsViewModel>.Instance);
         var dialog = new Views.SettingsWindow { DataContext = vm };
         dialog.ShowDialog();
